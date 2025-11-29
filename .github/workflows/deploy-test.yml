@@ -53,7 +53,7 @@ jobs:
         with:
           host: ${{ secrets.TEST_VM_HOST }}
           username: ${{ secrets.TEST_VM_USER }}
-          key: ${{ secrets.TEST_VM_SSH_KEY }}
+          password: ${{ secrets.TEST_VM_PASSWORD }}
           script: |
             set -e
             
