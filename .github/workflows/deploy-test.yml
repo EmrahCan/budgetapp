@@ -49,10 +49,10 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Setup SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.TEST_VM_SSH_KEY }}
-          known_hosts: 'placeholder'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TEST_VM_SSH_KEY }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
       
       - name: Add Known Hosts
         run: ssh-keyscan -H ${{ secrets.TEST_VM_HOST }} >> ~/.ssh/known_hosts
