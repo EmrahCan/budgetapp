@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('checking', 'savings', 'cash', 'investment')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('checking', 'savings', 'cash', 'investment', 'overdraft')),
     balance DECIMAL(12,2) DEFAULT 0.00,
     currency VARCHAR(3) DEFAULT 'TRY',
     overdraft_limit DECIMAL(12,2) DEFAULT 0.00 CHECK (overdraft_limit >= 0),
@@ -242,3 +242,63 @@ CREATE TRIGGER update_installment_payments_updated_at BEFORE UPDATE ON installme
 
 CREATE TRIGGER update_installment_payment_transactions_updated_at BEFORE UPDATE ON installment_payment_transactions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- 
+Smart Notifications table
+CREATE TABLE IF NOT EXISTS smart_notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),
+    is_read BOOLEAN DEFAULT false,
+    is_dismissed BOOLEAN DEFAULT false,
+    action_url TEXT,
+    metadata JSONB,
+    data JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP,
+    dismissed_at TIMESTAMP,
+    related_entity_id UUID,
+    related_entity_type VARCHAR(50),
+    scheduled_for TIMESTAMP
+);
+
+-- Create indexes for smart_notifications
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_user_id ON smart_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_type ON smart_notifications(notification_type);
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_priority ON smart_notifications(priority);
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_created_at ON smart_notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_is_read ON smart_notifications(is_read) WHERE is_read = false;
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_is_dismissed ON smart_notifications(is_dismissed) WHERE is_dismissed = false;
+CREATE INDEX IF NOT EXISTS idx_smart_notifications_entity ON smart_notifications(related_entity_type, related_entity_id);
+
+-- Fixed Payment History table
+CREATE TABLE IF NOT EXISTS fixed_payment_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    fixed_payment_id INTEGER NOT NULL REFERENCES fixed_payments(id) ON DELETE CASCADE,
+    payment_month INTEGER NOT NULL CHECK (payment_month >= 1 AND payment_month <= 12),
+    payment_year INTEGER NOT NULL CHECK (payment_year >= 2020),
+    is_paid BOOLEAN DEFAULT false,
+    paid_date DATE,
+    paid_amount DECIMAL(12,2),
+    transaction_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_payment_month_year UNIQUE(fixed_payment_id, payment_month, payment_year)
+);
+
+-- Create indexes for fixed_payment_history
+CREATE INDEX IF NOT EXISTS idx_fixed_payment_history_user_id ON fixed_payment_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_fixed_payment_history_fixed_payment_id ON fixed_payment_history(fixed_payment_id);
+CREATE INDEX IF NOT EXISTS idx_fixed_payment_history_month_year ON fixed_payment_history(payment_month, payment_year);
+CREATE INDEX IF NOT EXISTS idx_fixed_payment_history_is_paid ON fixed_payment_history(is_paid);
+CREATE INDEX IF NOT EXISTS idx_fixed_payment_history_paid_date ON fixed_payment_history(paid_date);
+
+-- Create trigger for fixed_payment_history
+CREATE TRIGGER update_fixed_payment_history_updated_at 
+    BEFORE UPDATE ON fixed_payment_history
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
