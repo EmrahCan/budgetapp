@@ -51,104 +51,31 @@ jobs:
     name: Deploy to Production VM
     needs: test
     runs-on: ubuntu-latest
+    environment: production
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Deploy to Production
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      
+      - name: Copy deploy script to VM
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_VM_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.PROD_VM_USER }}@${{ secrets.PROD_VM_HOST }} << 'ENDSSH'
-            set -e
-            
-            echo "🚀 Starting Production Deployment"
-            echo "=================================="
-            
-            cd /home/azureuser/budget-app
-            
-            # Backup database before deployment
-            echo "📦 Creating database backup..."
-            ./scripts/backup-database.sh
-            
-            # Pull latest code
-            echo "📥 Pulling latest code..."
-            git fetch origin
-            git reset --hard origin/main
-            
-            # Copy production environment file
-            echo "⚙️  Setting up environment..."
-            if [ ! -f .env ]; then
-              echo "❌ .env file not found! Please create it first."
-              exit 1
-            fi
-            
-            # Build new images
-            echo "🔨 Building Docker images..."
-            docker-compose build --no-cache backend
-            
-            # Rolling restart - backend first
-            echo "🔄 Restarting backend..."
-            docker-compose up -d --no-deps --build backend
-            
-            # Wait for backend to be healthy
-            echo "⏳ Waiting for backend to be healthy..."
-            sleep 15
-            
-            # Check backend health
-            if ! curl -f http://localhost/api/health; then
-              echo "❌ Backend health check failed!"
-              exit 1
-            fi
-            echo "✓ Backend is healthy"
-            
-            # Build and restart frontend
-            echo "🔨 Building frontend..."
-            docker-compose build --no-cache frontend
-            
-            echo "🔄 Restarting frontend..."
-            docker-compose up -d --no-deps --build frontend
-            
-            # Wait for frontend
-            sleep 10
-            
-            # Restart nginx to pick up any changes
-            echo "🔄 Restarting nginx..."
-            docker-compose up -d --no-deps nginx
-            
-            sleep 5
-            
-            # Final health checks
-            echo "🏥 Running health checks..."
-            
-            if ! curl -f http://localhost/health; then
-              echo "❌ Nginx health check failed!"
-              exit 1
-            fi
-            echo "✓ Nginx is healthy"
-            
-            if ! curl -f http://localhost/api/health; then
-              echo "❌ Backend health check failed!"
-              exit 1
-            fi
-            echo "✓ Backend is healthy"
-            
-            if ! curl -f http://localhost/; then
-              echo "❌ Frontend health check failed!"
-              exit 1
-            fi
-            echo "✓ Frontend is healthy"
-            
-            # Cleanup old images
-            echo "🧹 Cleaning up old Docker images..."
-            docker image prune -f
-            
-            echo ""
-            echo "✅ Production deployment completed successfully!"
-            echo "=================================="
-          ENDSSH
+          sshpass -e scp -o StrictHostKeyChecking=no \
+            scripts/deploy-production.sh \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:~/budgetapp/scripts/
+      
+      - name: Execute deploy script on VM
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "cd ~/budgetapp && chmod +x scripts/deploy-production.sh && bash scripts/deploy-production.sh"
+
             
       - name: Notify on Success
         if: success()
