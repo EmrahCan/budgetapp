@@ -43,8 +43,8 @@ cp .env.example .env
 
 Örnek `.env`:
 ```env
-PORT=3003
-REACT_APP_API_URL=http://localhost:5002/api
+PORT=3008
+REACT_APP_API_URL=http://localhost:5008/api
 ```
 
 ### 4. Servisleri Başlatın
@@ -63,8 +63,8 @@ npm start
 
 ## 🌐 Erişim
 
-- **Frontend**: http://localhost:3003
-- **Backend API**: http://localhost:5002
+- **Frontend**: http://localhost:3008
+- **Backend API**: http://localhost:5008
 - **Database**: localhost:5434
 
 ## 📚 Dokümanlar

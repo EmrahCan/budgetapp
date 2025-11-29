@@ -122,6 +122,10 @@ postgres_data/
 .env.local-prod
 .env.production
 
+# VM Credentials (NEVER COMMIT!)
+VM_CREDENTIALS.md
+*CREDENTIALS*.md
+
 # Documentation (keep only essential ones)
 *_OZETI.md
 *_TAMAMLANDI.md

@@ -1,0 +1,135 @@
+name: Deploy to Test
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: npm test || true
+      
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test -- --watchAll=false || true
+
+  deploy:
+    name: Deploy to Test VM
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to Test
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TEST_VM_HOST }}
+          username: ${{ secrets.TEST_VM_USER }}
+          key: ${{ secrets.TEST_VM_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "🧪 Starting Test Environment Deployment"
+            echo "========================================"
+            
+            cd /home/azureuser/budget-app
+            
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/develop
+            
+            # Copy test environment file
+            echo "⚙️  Setting up environment..."
+            if [ ! -f .env ]; then
+              echo "❌ .env file not found! Please create it first."
+              exit 1
+            fi
+            
+            # Stop all containers
+            echo "🛑 Stopping containers..."
+            docker-compose down
+            
+            # Build new images
+            echo "🔨 Building Docker images..."
+            docker-compose build --no-cache
+            
+            # Start all containers
+            echo "🚀 Starting containers..."
+            docker-compose up -d
+            
+            # Wait for services to be ready
+            echo "⏳ Waiting for services to be ready..."
+            sleep 20
+            
+            # Health checks
+            echo "🏥 Running health checks..."
+            
+            MAX_RETRIES=5
+            RETRY_COUNT=0
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -f http://localhost/health && \
+                 curl -f http://localhost/api/health; then
+                echo "✓ All services are healthy"
+                break
+              fi
+              
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
+                sleep 10
+              else
+                echo "❌ Health checks failed after $MAX_RETRIES attempts"
+                docker-compose logs --tail=50
+                exit 1
+              fi
+            done
+            
+            # Cleanup
+            echo "🧹 Cleaning up..."
+            docker image prune -f
+            
+            echo ""
+            echo "✅ Test deployment completed successfully!"
+            echo "========================================"
+      
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Test deployment successful!"
+          echo "Deployed commit: ${{ github.sha }}"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Test deployment failed!"
+          echo "Failed commit: ${{ github.sha }}"

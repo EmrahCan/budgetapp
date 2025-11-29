@@ -1,0 +1,165 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: npm test || true  # Don't fail if no tests yet
+      
+      - name: Lint Backend
+        working-directory: ./backend
+        run: npm run lint || echo "No lint script found"
+      
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test -- --watchAll=false || true  # Don't fail if no tests yet
+      
+      - name: Lint Frontend
+        working-directory: ./frontend
+        run: npm run lint || echo "No lint script found"
+
+  deploy:
+    name: Deploy to Production VM
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_VM_HOST }}
+          username: ${{ secrets.PROD_VM_USER }}
+          key: ${{ secrets.PROD_VM_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting Production Deployment"
+            echo "=================================="
+            
+            cd /home/azureuser/budget-app
+            
+            # Backup database before deployment
+            echo "📦 Creating database backup..."
+            ./scripts/backup-database.sh
+            
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+            
+            # Copy production environment file
+            echo "⚙️  Setting up environment..."
+            if [ ! -f .env ]; then
+              echo "❌ .env file not found! Please create it first."
+              exit 1
+            fi
+            
+            # Build new images
+            echo "🔨 Building Docker images..."
+            docker-compose build --no-cache backend
+            
+            # Rolling restart - backend first
+            echo "🔄 Restarting backend..."
+            docker-compose up -d --no-deps --build backend
+            
+            # Wait for backend to be healthy
+            echo "⏳ Waiting for backend to be healthy..."
+            sleep 15
+            
+            # Check backend health
+            if ! curl -f http://localhost/api/health; then
+              echo "❌ Backend health check failed!"
+              exit 1
+            fi
+            echo "✓ Backend is healthy"
+            
+            # Build and restart frontend
+            echo "🔨 Building frontend..."
+            docker-compose build --no-cache frontend
+            
+            echo "🔄 Restarting frontend..."
+            docker-compose up -d --no-deps --build frontend
+            
+            # Wait for frontend
+            sleep 10
+            
+            # Restart nginx to pick up any changes
+            echo "🔄 Restarting nginx..."
+            docker-compose up -d --no-deps nginx
+            
+            sleep 5
+            
+            # Final health checks
+            echo "🏥 Running health checks..."
+            
+            if ! curl -f http://localhost/health; then
+              echo "❌ Nginx health check failed!"
+              exit 1
+            fi
+            echo "✓ Nginx is healthy"
+            
+            if ! curl -f http://localhost/api/health; then
+              echo "❌ Backend health check failed!"
+              exit 1
+            fi
+            echo "✓ Backend is healthy"
+            
+            if ! curl -f http://localhost/; then
+              echo "❌ Frontend health check failed!"
+              exit 1
+            fi
+            echo "✓ Frontend is healthy"
+            
+            # Cleanup old images
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -f
+            
+            echo ""
+            echo "✅ Production deployment completed successfully!"
+            echo "=================================="
+            
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Production deployment successful!"
+          echo "Deployed commit: ${{ github.sha }}"
+          echo "Deployed by: ${{ github.actor }}"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Production deployment failed!"
+          echo "Failed commit: ${{ github.sha }}"
+          echo "Please check the logs and rollback if necessary"

@@ -1,3 +1,5 @@
+# Multi-stage build for React frontend
+
 # Stage 1: Build
 FROM node:18-alpine AS builder
 
@@ -12,21 +14,37 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build frontend
+# Build argument for API URL
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine
+# Stage 2: Production
+FROM node:18-alpine
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
+
+# Install serve to run the built app
+RUN npm install -g serve
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
 # Copy built files from builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder --chown=nodejs:nodejs /app/build ./build
 
-# Expose port 3003
-EXPOSE 3003
+# Switch to non-root user
+USER nodejs
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Serve the application
+CMD ["serve", "-s", "build", "-l", "3000"]
