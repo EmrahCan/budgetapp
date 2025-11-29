@@ -57,12 +57,11 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Deploy to Production
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_VM_HOST }}
-          username: ${{ secrets.PROD_VM_USER }}
-          key: ${{ secrets.PROD_VM_SSH_KEY }}
-          script: |
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_VM_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.PROD_VM_USER }}@${{ secrets.PROD_VM_HOST }} << 'ENDSSH'
             set -e
             
             echo "🚀 Starting Production Deployment"
@@ -149,6 +148,7 @@ jobs:
             echo ""
             echo "✅ Production deployment completed successfully!"
             echo "=================================="
+          ENDSSH
             
       - name: Notify on Success
         if: success()
