@@ -60,6 +60,13 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
       
+      - name: Debug connection info
+        run: |
+          echo "Attempting to connect to VM..."
+          echo "User: ${{ secrets.VM_USER }}"
+          echo "Host: ${{ secrets.VM_HOST }}"
+          echo "Testing connection..."
+      
       - name: Setup VM directory structure
         env:
           SSHPASS: ${{ secrets.VM_PASSWORD }}
