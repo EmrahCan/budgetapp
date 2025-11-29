@@ -61,7 +61,7 @@ jobs:
         with:
           host: ${{ secrets.PROD_VM_HOST }}
           username: ${{ secrets.PROD_VM_USER }}
-          password: ${{ secrets.PROD_VM_PASSWORD }}
+          key: ${{ secrets.PROD_VM_SSH_KEY }}
           script: |
             set -e
             
