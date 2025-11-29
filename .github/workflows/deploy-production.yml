@@ -101,7 +101,48 @@ jobs:
           sshpass -e ssh -o StrictHostKeyChecking=no \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "cd ~/budgetapp && chmod +x scripts/deploy-production.sh && bash scripts/deploy-production.sh"
-
+      
+      - name: Initialize Database (First deployment or fix)
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
+            cd ~/budgetapp
+            
+            echo "🔧 Checking database authentication..."
+            
+            # Test if database connection works
+            DB_TEST=$(docker exec budget_backend node -e "
+              const { Pool } = require('pg');
+              const pool = new Pool({
+                host: 'database',
+                port: 5432,
+                database: 'budget_app_prod',
+                user: 'postgres',
+                password: 'Prod_DB_P@ssw0rd_2024_Secure_Random_Key_9Ht03GrRP7iK'
+              });
+              (async () => {
+                try {
+                  await pool.query('SELECT 1');
+                  console.log('OK');
+                  await pool.end();
+                  process.exit(0);
+                } catch (error) {
+                  console.log('FAIL');
+                  process.exit(1);
+                }
+              })();
+            " 2>&1 || echo "FAIL")
+            
+            if echo "$DB_TEST" | grep -q "FAIL"; then
+              echo "⚠️  Database authentication issue detected, fixing..."
+              chmod +x scripts/fix-production-db-auth.sh
+              ./scripts/fix-production-db-auth.sh
+            else
+              echo "✅ Database authentication OK"
+            fi
+          ENDSSH
             
       - name: Notify on Success
         if: success()
