@@ -1,66 +1,79 @@
 #!/bin/bash
 # Budget App - Setup Cron Jobs
-# This script sets up automated tasks for monitoring, backups, and maintenance
+# Configures automated monitoring and backup jobs
 
 set -e
 
-echo "Setting up cron jobs for Budget App..."
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo -e "${GREEN}Setting up cron jobs for Budget App...${NC}"
 echo ""
 
 # Get the application directory
-APP_DIR="$HOME/budget-app"
+APP_DIR="$HOME/budgetapp"
+
+if [ ! -d "$APP_DIR" ]; then
+    echo -e "${RED}❌ Application directory not found: $APP_DIR${NC}"
+    exit 1
+fi
 
 # Create a temporary cron file
-CRON_FILE=$(mktemp)
+TEMP_CRON=$(mktemp)
 
-# Get existing cron jobs (if any)
-crontab -l > "$CRON_FILE" 2>/dev/null || true
+# Get existing crontab (if any)
+crontab -l > "$TEMP_CRON" 2>/dev/null || true
 
-# Remove old Budget App cron jobs
-sed -i '/# Budget App/d' "$CRON_FILE"
-sed -i '/budget-app/d' "$CRON_FILE"
+# Remove old budget app cron jobs
+sed -i.bak '/# Budget App/d' "$TEMP_CRON" 2>/dev/null || true
+sed -i.bak '/budgetapp/d' "$TEMP_CRON" 2>/dev/null || true
 
 # Add new cron jobs
-cat >> "$CRON_FILE" <<EOF
+cat >> "$TEMP_CRON" << EOF
 
-# Budget App - Automated Tasks
-# ==============================
+# Budget App - Automated Jobs
+# ============================
 
-# Monitor resources every 5 minutes
+# Resource monitoring - every 5 minutes
 */5 * * * * $APP_DIR/scripts/monitor-resources.sh >> $APP_DIR/logs/cron.log 2>&1
 
-# Health check every 2 minutes
-*/2 * * * * $APP_DIR/scripts/check-health.sh >> $APP_DIR/logs/health-check.log 2>&1
+# Health checks - every 5 minutes
+*/5 * * * * $APP_DIR/scripts/check-health.sh >> $APP_DIR/logs/cron.log 2>&1
 
-# Daily database backup at 3 AM
-0 3 * * * $APP_DIR/scripts/backup-database.sh >> $APP_DIR/logs/backup.log 2>&1
+# Daily database backup - 3:00 AM
+0 3 * * * $APP_DIR/scripts/backup-database.sh >> $APP_DIR/logs/cron.log 2>&1
 
-# Weekly Docker cleanup on Sunday at 2 AM
-0 2 * * 0 docker system prune -f >> $APP_DIR/logs/docker-cleanup.log 2>&1
+# Weekly Docker cleanup - Sunday 4:00 AM
+0 4 * * 0 cd $APP_DIR && docker system prune -f >> $APP_DIR/logs/cron.log 2>&1
 
-# SSL certificate renewal check daily at 2:30 AM
-30 2 * * * certbot renew --quiet && docker-compose -f $APP_DIR/docker-compose.yml restart nginx >> $APP_DIR/logs/ssl-renewal.log 2>&1
-
-# Log rotation weekly on Monday at 1 AM
-0 1 * * 1 find $APP_DIR/logs -name "*.log" -mtime +7 -delete >> $APP_DIR/logs/cleanup.log 2>&1
+# Log rotation - Daily at 2:00 AM
+0 2 * * * find $APP_DIR/logs -name "*.log" -type f -mtime +7 -delete
 
 EOF
 
-# Install the new cron jobs
-crontab "$CRON_FILE"
+# Install the new crontab
+crontab "$TEMP_CRON"
 
 # Clean up
-rm "$CRON_FILE"
+rm "$TEMP_CRON"
 
-echo "✅ Cron jobs installed successfully!"
+echo -e "${GREEN}✓ Cron jobs installed successfully!${NC}"
 echo ""
 echo "Installed jobs:"
-echo "  - Resource monitoring: Every 5 minutes"
-echo "  - Health checks: Every 2 minutes"
-echo "  - Database backup: Daily at 3:00 AM"
-echo "  - Docker cleanup: Weekly on Sunday at 2:00 AM"
-echo "  - SSL renewal: Daily at 2:30 AM"
-echo "  - Log rotation: Weekly on Monday at 1:00 AM"
+echo "  - Resource monitoring (every 5 minutes)"
+echo "  - Health checks (every 5 minutes)"
+echo "  - Database backup (daily at 3:00 AM)"
+echo "  - Docker cleanup (weekly on Sunday at 4:00 AM)"
+echo "  - Log rotation (daily at 2:00 AM)"
 echo ""
-echo "View cron jobs: crontab -l"
-echo "View cron logs: tail -f $APP_DIR/logs/cron.log"
+echo "View cron jobs:"
+echo "  crontab -l"
+echo ""
+echo "View cron logs:"
+echo "  tail -f $APP_DIR/logs/cron.log"
+echo ""
+echo -e "${YELLOW}Note: Make sure all scripts have execute permissions:${NC}"
+echo "  chmod +x $APP_DIR/scripts/*.sh"

@@ -6,7 +6,7 @@
 DISK_THRESHOLD=80
 MEMORY_THRESHOLD=90
 CPU_THRESHOLD=80
-LOG_FILE="/home/azureuser/budget-app/logs/monitoring.log"
+LOG_FILE="$HOME/budgetapp/logs/monitoring.log"
 ALERT_EMAIL="admin@example.com"  # Change this to your email
 
 # Colors for output

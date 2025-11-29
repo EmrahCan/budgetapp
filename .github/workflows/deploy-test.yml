@@ -53,14 +53,14 @@ jobs:
         with:
           host: ${{ secrets.TEST_VM_HOST }}
           username: ${{ secrets.TEST_VM_USER }}
-          key: ${{ secrets.TEST_VM_SSH_KEY }}
+          password: ${{ secrets.TEST_VM_PASSWORD }}
           script: |
             set -e
             
             echo "🧪 Starting Test Environment Deployment"
             echo "========================================"
             
-            cd /home/azureuser/budget-app
+            cd ~/budgetapp
             
             # Pull latest code
             echo "📥 Pulling latest code..."
@@ -113,6 +113,15 @@ jobs:
                 exit 1
               fi
             done
+            
+            # Run smoke tests
+            echo "🧪 Running smoke tests..."
+            if ! ./scripts/smoke-tests.sh; then
+              echo "❌ Smoke tests failed!"
+              docker-compose logs --tail=50
+              exit 1
+            fi
+            echo "✓ Smoke tests passed"
             
             # Cleanup
             echo "🧹 Cleaning up..."

@@ -61,14 +61,14 @@ jobs:
         with:
           host: ${{ secrets.PROD_VM_HOST }}
           username: ${{ secrets.PROD_VM_USER }}
-          key: ${{ secrets.PROD_VM_SSH_KEY }}
+          password: ${{ secrets.PROD_VM_PASSWORD }}
           script: |
             set -e
             
             echo "🚀 Starting Production Deployment"
             echo "=================================="
             
-            cd /home/azureuser/budget-app
+            cd ~/budgetapp
             
             # Backup database before deployment
             echo "📦 Creating database backup..."
@@ -141,6 +141,14 @@ jobs:
               exit 1
             fi
             echo "✓ Frontend is healthy"
+            
+            # Run smoke tests
+            echo "🧪 Running smoke tests..."
+            if ! ./scripts/smoke-tests.sh; then
+              echo "❌ Smoke tests failed!"
+              exit 1
+            fi
+            echo "✓ Smoke tests passed"
             
             # Cleanup old images
             echo "🧹 Cleaning up old Docker images..."
