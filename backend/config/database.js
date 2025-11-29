@@ -22,7 +22,50 @@ const dbConfig = {
 
 console.log(`🔗 Connecting to database: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
 
-const pool = new Pool(dbConfig);
+// Database connection retry logic with exponential backoff
+const createPoolWithRetry = async (maxRetries = 5, initialDelay = 1000) => {
+  let retries = 0;
+  let delay = initialDelay;
+
+  while (retries < maxRetries) {
+    try {
+      const pool = new Pool(dbConfig);
+      
+      // Test the connection
+      const client = await pool.connect();
+      console.log('✅ Database connection successful');
+      client.release();
+      
+      return pool;
+    } catch (error) {
+      retries++;
+      console.error(`❌ Database connection attempt ${retries}/${maxRetries} failed:`, error.message);
+      
+      if (retries >= maxRetries) {
+        console.error('💥 Max database connection retries reached. Exiting...');
+        throw error;
+      }
+      
+      console.log(`⏳ Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Exponential backoff: double the delay for next retry
+      delay *= 2;
+    }
+  }
+};
+
+// Create pool with retry logic (will be initialized on first use)
+let pool;
+const initializePool = async () => {
+  if (!pool) {
+    pool = await createPoolWithRetry();
+  }
+  return pool;
+};
+
+// Initialize pool immediately
+pool = new Pool(dbConfig);
 
 // Connection event handlers
 pool.on('connect', (client) => {

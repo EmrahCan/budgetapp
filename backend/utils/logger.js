@@ -116,18 +116,33 @@ logger.errorWithContext = (message, error, context = {}) => {
 logger.requestMiddleware = (req, res, next) => {
   const start = Date.now();
   
+  // Skip logging for health check endpoints
+  if (req.path === '/health' || req.path === '/api/health') {
+    return next();
+  }
+  
   res.on('finish', () => {
     const duration = Date.now() - start;
-    logger.info('HTTP Request', {
+    const logData = {
+      timestamp: new Date().toISOString(),
       method: req.method,
+      path: req.path,
       url: req.url,
       statusCode: res.statusCode,
-      duration,
+      duration: `${duration}ms`,
+      ip: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent'),
-      ip: req.ip,
       userId: req.user ? req.user.id : null,
-      timestamp: new Date().toISOString()
-    });
+      contentLength: res.get('Content-Length'),
+      referrer: req.get('Referrer') || req.get('Referer')
+    };
+    
+    // Log as error if status code >= 400
+    if (res.statusCode >= 400) {
+      logger.error('HTTP Request Error', logData);
+    } else {
+      logger.info('HTTP Request', logData);
+    }
   });
   
   next();

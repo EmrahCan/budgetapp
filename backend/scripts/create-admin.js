@@ -3,8 +3,8 @@ const pool = require('../config/database');
 
 async function createAdminUser() {
   try {
-    const email = 'admin@budget.com';
-    const password = 'admin123';
+    const email = process.env.ADMIN_EMAIL || 'admin@budgetapp.site';
+    const password = process.env.ADMIN_PASSWORD || 'Admin123!@#';
     const firstName = 'Admin';
     const lastName = 'User';
     
@@ -17,16 +17,36 @@ async function createAdminUser() {
     const checkResult = await pool.query(checkQuery, [email]);
     
     if (checkResult.rows.length > 0) {
-      console.log('❌ Admin user already exists!');
+      console.log('⚠️  Admin user already exists!');
       console.log('Email:', email);
+      console.log('Updating password...');
+      
+      // Update existing admin user password
+      const updateQuery = `
+        UPDATE users 
+        SET password = $1, role = 'admin', updated_at = NOW()
+        WHERE email = $2
+        RETURNING id, email, name, surname, role
+      `;
+      
+      const result = await pool.query(updateQuery, [passwordHash, email]);
+      
+      console.log('✅ Admin user password updated successfully!');
+      console.log('-----------------------------------');
+      console.log('Email:', email);
+      console.log('Password:', password);
+      console.log('Role:', result.rows[0].role);
+      console.log('-----------------------------------');
+      console.log('⚠️  Please change the password after first login!');
+      
       process.exit(0);
     }
     
     // Create admin user
     const insertQuery = `
-      INSERT INTO users (email, password_hash, first_name, last_name, role)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, email, first_name, last_name, role
+      INSERT INTO users (email, password, name, surname, role, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
+      RETURNING id, email, name, surname, role
     `;
     
     const result = await pool.query(insertQuery, [
@@ -41,6 +61,7 @@ async function createAdminUser() {
     console.log('-----------------------------------');
     console.log('Email:', email);
     console.log('Password:', password);
+    console.log('Name:', result.rows[0].name, result.rows[0].surname);
     console.log('Role:', result.rows[0].role);
     console.log('-----------------------------------');
     console.log('⚠️  Please change the password after first login!');
