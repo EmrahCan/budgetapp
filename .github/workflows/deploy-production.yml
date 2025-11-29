@@ -60,6 +60,32 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
       
+      - name: Setup VM directory structure
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
+            # Create directory if it doesn't exist
+            if [ ! -d ~/budgetapp ]; then
+              echo "📁 Creating budgetapp directory..."
+              mkdir -p ~/budgetapp
+              cd ~/budgetapp
+              
+              # Clone repository
+              echo "📥 Cloning repository..."
+              git clone https://github.com/EmrahCan/budgetapp.git .
+              git checkout main
+              
+              # Create necessary directories
+              mkdir -p logs backend/logs nginx/logs backups scripts
+              
+              echo "✅ Initial setup complete"
+            else
+              echo "✅ Directory already exists"
+            fi
+          ENDSSH
+      
       - name: Copy deploy script to VM
         env:
           SSHPASS: ${{ secrets.VM_PASSWORD }}
