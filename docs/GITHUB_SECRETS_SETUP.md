@@ -17,9 +17,9 @@ These secrets are used by GitHub Actions workflows:
 | `DB_PASSWORD` | Database password | `Prod_DB_P@ssw0rd_2024_Secure_Random_Key_9Ht03GrRP7iK` |
 | `JWT_SECRET` | JWT secret key | `prod_jwt_secret_key_2024_very_secure_random_string_xK9mP2nQ5wR8tY` |
 | `GEMINI_API_KEY` | Google Gemini API key | `AIzaSyC9JlhE9djALEg6lPurAbV0PpWY-KdAK1g` |
-| `FRONTEND_URL` | Frontend URL | `http://4.180.255.34` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://4.180.255.34,http://localhost` |
-| `REACT_APP_API_URL` | API URL for frontend | `http://4.180.255.34/api` |
+| `FRONTEND_URL` | Frontend URL | `https://budgetapp.site` |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `https://budgetapp.site,http://localhost` |
+| `REACT_APP_API_URL` | API URL for frontend | `https://budgetapp.site/api` |
 
 ## How to Add Secrets
 
@@ -59,6 +59,7 @@ For each environment:
 ## Current Configuration
 
 ### Production Environment
+- **Domain:** https://budgetapp.site (Cloudflare SSL)
 - **VM IP:** 4.180.255.34
 - **Database:** budget_app_prod
 - **User:** budget_admin
