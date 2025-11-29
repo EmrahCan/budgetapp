@@ -34,19 +34,36 @@ RUN npm ci --legacy-peer-deps
 
 ---
 
-### Fix 2: Nginx SSL Certificate Error
+### Fix 2: Nginx Configuration Errors
 
-**Issue:** Nginx container keeps restarting with error:
+**Issue 1:** Nginx container keeps restarting with error:
 ```
 nginx: [emerg] cannot load certificate "/etc/nginx/ssl/fullchain.pem": 
 BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory)
 ```
 
-**Root Cause:** Nginx config expects SSL certificates but we're using Cloudflare for SSL termination
+**Issue 2:** Nginx fails with duplicate location error:
+```
+nginx: [emerg] duplicate location "/health" in /etc/nginx/nginx.conf:164
+```
 
-**Solution:** Remove HTTPS server block from nginx config (Cloudflare handles HTTPS)
+**Root Causes:** 
+1. Nginx config expects SSL certificates but we're using Cloudflare for SSL termination
+2. `/health` endpoint defined twice in config (once in main server block, once at end)
+
+**Solutions:**
+
+**A) Remove HTTPS Server Block**
 
 **File:** `nginx/nginx.conf`
+
+Delete the entire HTTPS server block (starts with `listen 443 ssl http2;`). Keep only HTTP block (port 80).
+
+**B) Remove Duplicate /health Location**
+
+**File:** `nginx/nginx.conf`
+
+Keep only ONE `/health` location block. Delete the duplicate (usually at end of file around line 164).
 
 **Remove:** Entire HTTPS server block (starts with `listen 443 ssl http2;`)
 

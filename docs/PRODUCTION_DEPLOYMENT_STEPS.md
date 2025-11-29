@@ -101,29 +101,50 @@ chmod 600 .env
 mkdir -p logs backend/logs nginx/logs backups
 ```
 
-## Step 6: Verify Fixes Are Applied
+## Step 6: Apply Critical Fixes
 
-**Check Frontend Dockerfile:**
-```bash
-grep "legacy-peer-deps" frontend/Dockerfile
-```
+### Fix 1: Frontend Dockerfile (TypeScript dependency issue)
 
-Should show: `RUN npm ci --legacy-peer-deps`
-
-**If not found, fix it:**
 ```bash
 nano frontend/Dockerfile
-# Change line 12 to: RUN npm ci --legacy-peer-deps
 ```
 
-**Check Nginx Config:**
+**Find line 12 and change:**
+```dockerfile
+# OLD (will fail):
+RUN npm ci
+
+# NEW (correct):
+RUN npm ci --legacy-peer-deps
+```
+
+Save: `Ctrl+X`, `Y`, `Enter`
+
+### Fix 2: Nginx Config (Remove duplicate /health and HTTPS block)
+
+```bash
+nano nginx/nginx.conf
+```
+
+**Critical changes needed:**
+1. Remove HTTPS server block (listen 443) - Cloudflare handles SSL
+2. Remove duplicate `/health` location blocks - Keep only ONE
+
+**Verify no duplicates:**
+```bash
+grep -n "location /health" nginx/nginx.conf
+```
+
+Should show only ONE line. If you see two, delete one.
+
+**Verify no HTTPS:**
 ```bash
 grep -c "listen 443" nginx/nginx.conf
 ```
 
-Should return: `0` (no HTTPS block)
+Should return: `0`
 
-**If it returns 1 or more, nginx needs fixing.**
+**If issues found, use the corrected nginx.conf from test environment or see DEPLOYMENT_FIXES.md**
 
 ## Step 7: Start Docker Containers
 
