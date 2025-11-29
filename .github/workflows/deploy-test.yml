@@ -33,7 +33,7 @@ jobs:
       
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       - name: Run Frontend Tests
         working-directory: ./frontend
@@ -43,93 +43,28 @@ jobs:
     name: Deploy to Test VM
     needs: test
     runs-on: ubuntu-latest
+    environment: test
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      
       - name: Deploy to Test
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.TEST_VM_HOST }}
-          username: ${{ secrets.TEST_VM_USER }}
-          password: ${{ secrets.TEST_VM_PASSWORD }}
-          script: |
-            set -e
-            
-            echo "🧪 Starting Test Environment Deployment"
-            echo "========================================"
-            
-            cd ~/budgetapp
-            
-            # Pull latest code
-            echo "📥 Pulling latest code..."
-            git fetch origin
-            git reset --hard origin/develop
-            
-            # Copy test environment file
-            echo "⚙️  Setting up environment..."
-            if [ ! -f .env ]; then
-              echo "❌ .env file not found! Please create it first."
-              exit 1
-            fi
-            
-            # Stop all containers
-            echo "🛑 Stopping containers..."
-            docker-compose down
-            
-            # Build new images
-            echo "🔨 Building Docker images..."
-            docker-compose build --no-cache
-            
-            # Start all containers
-            echo "🚀 Starting containers..."
-            docker-compose up -d
-            
-            # Wait for services to be ready
-            echo "⏳ Waiting for services to be ready..."
-            sleep 20
-            
-            # Health checks
-            echo "🏥 Running health checks..."
-            
-            MAX_RETRIES=5
-            RETRY_COUNT=0
-            
-            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              if curl -f http://localhost/health && \
-                 curl -f http://localhost/api/health; then
-                echo "✓ All services are healthy"
-                break
-              fi
-              
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
-                sleep 10
-              else
-                echo "❌ Health checks failed after $MAX_RETRIES attempts"
-                docker-compose logs --tail=50
-                exit 1
-              fi
-            done
-            
-            # Run smoke tests
-            echo "🧪 Running smoke tests..."
-            if ! ./scripts/smoke-tests.sh; then
-              echo "❌ Smoke tests failed!"
-              docker-compose logs --tail=50
-              exit 1
-            fi
-            echo "✓ Smoke tests passed"
-            
-            # Cleanup
-            echo "🧹 Cleaning up..."
-            docker image prune -f
-            
-            echo ""
-            echo "✅ Test deployment completed successfully!"
-            echo "========================================"
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          # Copy deploy script to VM
+          sshpass -e scp -o StrictHostKeyChecking=no \
+            scripts/deploy-test.sh \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:~/budgetapp/scripts/
+          
+          # Execute deploy script on VM
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "cd ~/budgetapp && chmod +x scripts/deploy-test.sh && bash scripts/deploy-test.sh"
       
       - name: Notify on Success
         if: success()

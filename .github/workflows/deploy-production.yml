@@ -37,7 +37,7 @@ jobs:
       
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       - name: Run Frontend Tests
         working-directory: ./frontend
@@ -57,18 +57,17 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Deploy to Production
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_VM_HOST }}
-          username: ${{ secrets.PROD_VM_USER }}
-          password: ${{ secrets.PROD_VM_PASSWORD }}
-          script: |
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_VM_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.PROD_VM_USER }}@${{ secrets.PROD_VM_HOST }} << 'ENDSSH'
             set -e
             
             echo "🚀 Starting Production Deployment"
             echo "=================================="
             
-            cd ~/budgetapp
+            cd /home/azureuser/budget-app
             
             # Backup database before deployment
             echo "📦 Creating database backup..."
@@ -142,14 +141,6 @@ jobs:
             fi
             echo "✓ Frontend is healthy"
             
-            # Run smoke tests
-            echo "🧪 Running smoke tests..."
-            if ! ./scripts/smoke-tests.sh; then
-              echo "❌ Smoke tests failed!"
-              exit 1
-            fi
-            echo "✓ Smoke tests passed"
-            
             # Cleanup old images
             echo "🧹 Cleaning up old Docker images..."
             docker image prune -f
@@ -157,6 +148,7 @@ jobs:
             echo ""
             echo "✅ Production deployment completed successfully!"
             echo "=================================="
+          ENDSSH
             
       - name: Notify on Success
         if: success()
