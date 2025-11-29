@@ -59,7 +59,7 @@ jobs:
             echo "🧪 Starting Test Environment Deployment"
             echo "========================================"
             
-            cd /home/azureuser/budget-app
+            cd ~/budgetapp
             
             # Pull latest code
             echo "📥 Pulling latest code..."
