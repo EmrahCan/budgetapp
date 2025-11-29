@@ -86,36 +86,29 @@ jobs:
             fi
           ENDSSH
       
+      - name: Copy env creation script to VM
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          sshpass -e scp -o StrictHostKeyChecking=no \
+            scripts/create-env-file.sh \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:~/budgetapp/scripts/
+      
       - name: Create .env file on VM
         env:
           SSHPASS: ${{ secrets.VM_PASSWORD }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
-          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
         run: |
           sshpass -e ssh -o StrictHostKeyChecking=no \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
-            "cd ~/budgetapp && cat > .env << 'EOF'
-# Database Configuration
-DB_PASSWORD=${DB_PASSWORD}
-DB_NAME=budget_app_prod
-DB_USER=budget_admin
-
-# JWT Configuration
-JWT_SECRET=${JWT_SECRET}
-
-# AI Configuration
-GEMINI_API_KEY=${GEMINI_API_KEY}
-
-# Frontend Configuration
-FRONTEND_URL=${FRONTEND_URL}
-ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-REACT_APP_API_URL=${REACT_APP_API_URL}
-EOF
-"
+            "cd ~/budgetapp && \
+             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}' && \
+             export JWT_SECRET='${{ secrets.JWT_SECRET }}' && \
+             export GEMINI_API_KEY='${{ secrets.GEMINI_API_KEY }}' && \
+             export FRONTEND_URL='${{ secrets.FRONTEND_URL }}' && \
+             export ALLOWED_ORIGINS='${{ secrets.ALLOWED_ORIGINS }}' && \
+             export REACT_APP_API_URL='${{ secrets.REACT_APP_API_URL }}' && \
+             chmod +x scripts/create-env-file.sh && \
+             ./scripts/create-env-file.sh"
       
       - name: Copy deploy script to VM
         env:
