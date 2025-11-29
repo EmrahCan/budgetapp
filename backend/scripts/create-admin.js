@@ -24,9 +24,9 @@ async function createAdminUser() {
       // Update existing admin user password
       const updateQuery = `
         UPDATE users 
-        SET password = $1, role = 'admin', updated_at = NOW()
+        SET password_hash = $1, role = 'admin', updated_at = NOW()
         WHERE email = $2
-        RETURNING id, email, name, surname, role
+        RETURNING id, email, first_name, last_name, role
       `;
       
       const result = await pool.query(updateQuery, [passwordHash, email]);
@@ -44,9 +44,9 @@ async function createAdminUser() {
     
     // Create admin user
     const insertQuery = `
-      INSERT INTO users (email, password, name, surname, role, is_active, created_at, updated_at)
+      INSERT INTO users (email, password_hash, first_name, last_name, role, is_active, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
-      RETURNING id, email, name, surname, role
+      RETURNING id, email, first_name, last_name, role
     `;
     
     const result = await pool.query(insertQuery, [
@@ -61,7 +61,7 @@ async function createAdminUser() {
     console.log('-----------------------------------');
     console.log('Email:', email);
     console.log('Password:', password);
-    console.log('Name:', result.rows[0].name, result.rows[0].surname);
+    console.log('Name:', result.rows[0].first_name, result.rows[0].last_name);
     console.log('Role:', result.rows[0].role);
     console.log('-----------------------------------');
     console.log('⚠️  Please change the password after first login!');
