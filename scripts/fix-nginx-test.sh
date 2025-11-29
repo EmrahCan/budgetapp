@@ -1,19 +1,27 @@
 #!/bin/bash
 
-# Fix Nginx Configuration on Test VM
+# Fix Nginx Configuration on VM
 # This script removes SSL configuration and ensures HTTP-only setup
 
 set -e
 
 echo "🔧 Fixing Nginx Configuration..."
 
+cd ~/budgetapp
+
 # Stop containers
 echo "🛑 Stopping containers..."
-cd ~/budgetapp
-docker compose down
+docker-compose down 2>/dev/null || true
+
+# Remove any old SSL directories
+echo "🗑️  Removing old SSL certificates and directories..."
+rm -rf nginx/ssl 2>/dev/null || true
+rm -rf /etc/nginx/ssl 2>/dev/null || true
 
 # Ensure we have the latest nginx.conf from the repo
 echo "📥 Pulling latest nginx configuration..."
+git fetch origin
+git checkout develop
 git pull origin develop
 
 # Verify nginx.conf doesn't have SSL configuration
@@ -30,26 +38,23 @@ fi
 
 echo "✅ Nginx configuration verified - HTTP only"
 
-# Remove any old SSL certificates
-echo "🗑️  Removing old SSL certificates if they exist..."
-rm -rf nginx/ssl
-
 # Rebuild and start containers
-echo "🔨 Rebuilding containers..."
-docker compose build --no-cache nginx
+echo "🔨 Rebuilding all containers..."
+docker-compose build --no-cache
 
 echo "🚀 Starting containers..."
-docker compose up -d
+docker-compose up -d
 
 # Wait for services
 echo "⏳ Waiting for services to start..."
-sleep 10
+sleep 15
 
 # Health check
 echo "🏥 Running health check..."
 for i in {1..5}; do
     if curl -f http://localhost/health; then
         echo "✅ Nginx is healthy!"
+        echo "✅ Fix completed successfully!"
         exit 0
     fi
     echo "⏳ Retry $i/5..."
@@ -58,6 +63,6 @@ done
 
 echo "❌ Health check failed"
 echo "📋 Checking nginx logs..."
-docker compose logs nginx --tail=50
+docker-compose logs nginx --tail=50
 
 exit 1
