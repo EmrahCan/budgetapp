@@ -86,6 +86,36 @@ jobs:
             fi
           ENDSSH
       
+      - name: Create .env file on VM
+        env:
+          SSHPASS: ${{ secrets.VM_PASSWORD }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
+            cd ~/budgetapp
+            
+            echo "📝 Creating .env file..."
+            cat > .env << 'EOF'
+# Database Configuration
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+DB_NAME=budget_app_prod
+DB_USER=budget_admin
+
+# JWT Configuration
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+# AI Configuration
+GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+# Frontend Configuration
+FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
+EOF
+            
+            echo "✅ .env file created"
+          ENDSSH
+      
       - name: Copy deploy script to VM
         env:
           SSHPASS: ${{ secrets.VM_PASSWORD }}
