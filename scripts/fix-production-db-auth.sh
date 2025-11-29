@@ -19,7 +19,7 @@ echo ""
 
 # Database credentials from .env.production
 DB_NAME="budget_app_prod"
-DB_USER="postgres"
+DB_USER="budget_admin"
 DB_PASSWORD="Prod_DB_P@ssw0rd_2024_Secure_Random_Key_9Ht03GrRP7iK"
 
 echo -e "${YELLOW}📋 Step 1: Checking database container...${NC}"
@@ -30,20 +30,20 @@ fi
 echo -e "${GREEN}✅ Database container is running${NC}"
 
 echo ""
-echo -e "${YELLOW}📋 Step 2: Resetting postgres user password...${NC}"
-docker exec -i budget_database psql -U postgres <<EOF
--- Reset postgres user password
-ALTER USER postgres WITH PASSWORD '${DB_PASSWORD}';
+echo -e "${YELLOW}📋 Step 2: Resetting budget_admin user password...${NC}"
+docker exec -i budget_database psql -U budget_admin -d postgres <<EOF
+-- Reset budget_admin user password
+ALTER USER budget_admin WITH PASSWORD '${DB_PASSWORD}';
 \q
 EOF
 echo -e "${GREEN}✅ Password reset successfully${NC}"
 
 echo ""
 echo -e "${YELLOW}📋 Step 3: Verifying database exists...${NC}"
-DB_EXISTS=$(docker exec -i budget_database psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'")
+DB_EXISTS=$(docker exec -i budget_database psql -U budget_admin -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'")
 if [ "$DB_EXISTS" != "1" ]; then
     echo -e "${YELLOW}⚠️  Database doesn't exist, creating...${NC}"
-    docker exec -i budget_database psql -U postgres -c "CREATE DATABASE ${DB_NAME};"
+    docker exec -i budget_database psql -U budget_admin -d postgres -c "CREATE DATABASE ${DB_NAME};"
     echo -e "${GREEN}✅ Database created${NC}"
 else
     echo -e "${GREEN}✅ Database exists${NC}"
@@ -51,16 +51,16 @@ fi
 
 echo ""
 echo -e "${YELLOW}📋 Step 4: Setting database privileges...${NC}"
-docker exec -i budget_database psql -U postgres -d ${DB_NAME} <<EOF
+docker exec -i budget_database psql -U budget_admin -d ${DB_NAME} <<EOF
 -- Grant all privileges
-GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO postgres;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
-GRANT ALL PRIVILEGES ON SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO budget_admin;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO budget_admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO budget_admin;
+GRANT ALL PRIVILEGES ON SCHEMA public TO budget_admin;
 
 -- Set default privileges for future objects
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO budget_admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO budget_admin;
 \q
 EOF
 echo -e "${GREEN}✅ Privileges set${NC}"
@@ -86,14 +86,15 @@ const pool = new Pool({
   host: 'database',
   port: 5432,
   database: '${DB_NAME}',
-  user: '${DB_USER}',
+  user: 'budget_admin',
   password: '${DB_PASSWORD}'
 });
 
 (async () => {
   try {
-    const result = await pool.query('SELECT NOW() as current_time, version() as pg_version');
+    const result = await pool.query('SELECT NOW() as current_time, current_user, version() as pg_version');
     console.log('✅ Database connection successful!');
+    console.log('User:', result.rows[0].current_user);
     console.log('Time:', result.rows[0].current_time);
     console.log('PostgreSQL:', result.rows[0].pg_version.split(' ')[0], result.rows[0].pg_version.split(' ')[1]);
     await pool.end();

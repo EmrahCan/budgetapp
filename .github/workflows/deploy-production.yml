@@ -119,7 +119,7 @@ jobs:
                 host: 'database',
                 port: 5432,
                 database: 'budget_app_prod',
-                user: 'postgres',
+                user: 'budget_admin',
                 password: 'Prod_DB_P@ssw0rd_2024_Secure_Random_Key_9Ht03GrRP7iK'
               });
               (async () => {
