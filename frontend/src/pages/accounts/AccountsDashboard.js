@@ -354,6 +354,13 @@ const AccountsDashboard = () => {
     accountType: 'checking',
     currentBalance: '',
     accountNumber: '',
+    // Flexible account fields
+    isFlexible: false,
+    accountLimit: '',
+    currentDebt: '0',
+    interestRate: '',
+    minimumPaymentRate: '5',
+    paymentDueDate: '',
   });
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -386,6 +393,13 @@ const AccountsDashboard = () => {
         accountType: account.accountType || 'checking',
         currentBalance: account.currentBalance?.toString() || '',
         accountNumber: account.accountNumber || '',
+        // Flexible account fields
+        isFlexible: account.isFlexible || false,
+        accountLimit: account.accountLimit?.toString() || '',
+        currentDebt: account.currentDebt?.toString() || '0',
+        interestRate: account.interestRate?.toString() || '',
+        minimumPaymentRate: account.minimumPaymentRate?.toString() || '5',
+        paymentDueDate: account.paymentDueDate?.toString() || '',
       });
     } else {
       setEditingAccount(null);
@@ -396,6 +410,13 @@ const AccountsDashboard = () => {
         accountType: 'checking',
         currentBalance: '',
         accountNumber: '',
+        // Flexible account fields
+        isFlexible: false,
+        accountLimit: '',
+        currentDebt: '0',
+        interestRate: '',
+        minimumPaymentRate: '5',
+        paymentDueDate: '',
       });
     }
     setFormErrors({});
@@ -438,6 +459,13 @@ const AccountsDashboard = () => {
         type: formData.accountType,
         balance: parseFloat(formData.currentBalance),
         accountNumber: formData.accountNumber.trim() || null,
+        // Flexible account fields
+        isFlexible: formData.isFlexible,
+        accountLimit: formData.isFlexible && formData.accountLimit ? parseFloat(formData.accountLimit) : null,
+        currentDebt: formData.isFlexible ? parseFloat(formData.currentDebt) : 0,
+        interestRate: formData.isFlexible && formData.interestRate ? parseFloat(formData.interestRate) : null,
+        minimumPaymentRate: formData.isFlexible ? parseFloat(formData.minimumPaymentRate) : 5,
+        paymentDueDate: formData.isFlexible && formData.paymentDueDate ? parseInt(formData.paymentDueDate) : null,
       };
       if (editingAccount) {
         await accountsAPI.update(editingAccount.id, accountData);
