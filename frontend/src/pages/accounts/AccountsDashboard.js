@@ -435,10 +435,9 @@ const AccountsDashboard = () => {
         name: formData.name.trim(),
         bankId: formData.bankId || null,
         bankName: formData.bankName.trim() || null,
-        accountType: formData.accountType,
-        currentBalance: parseFloat(formData.currentBalance),
+        type: formData.accountType,
+        balance: parseFloat(formData.currentBalance),
         accountNumber: formData.accountNumber.trim() || null,
-        type: 'account',
       };
       if (editingAccount) {
         await accountsAPI.update(editingAccount.id, accountData);
