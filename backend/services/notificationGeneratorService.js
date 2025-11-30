@@ -380,7 +380,7 @@ class NotificationGeneratorService {
       // Create new notification
       const insertResult = await db.query(
         `INSERT INTO smart_notifications
-         (user_id, type, title, message, priority, 
+         (user_id, notification_type, title, message, priority, 
           related_entity_id, related_entity_type, metadata)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id`,
