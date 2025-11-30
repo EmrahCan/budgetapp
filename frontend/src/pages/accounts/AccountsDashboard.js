@@ -29,6 +29,8 @@ import {
   DialogActions,
   TextField,
   Autocomplete,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Add,
@@ -635,8 +637,100 @@ const AccountsDashboard = () => {
                 value={formData.accountNumber}
                 onChange={(e) => handleFormChange('accountNumber', e.target.value)}
                 helperText="Opsiyonel"
+                sx={{ mb: 3 }}
+              />
+
+              {/* Esnek Hesap Checkbox */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isFlexible}
+                    onChange={(e) => handleFormChange('isFlexible', e.target.checked)}
+                  />
+                }
+                label="Esnek Hesap (Kredili Mevduat)"
                 sx={{ mb: 2 }}
               />
+
+              {/* Flexible Account Fields */}
+              {formData.isFlexible && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                    Esnek Hesap Özellikleri
+                  </Typography>
+                  
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Hesap Limiti"
+                        type="number"
+                        value={formData.accountLimit}
+                        onChange={(e) => handleFormChange('accountLimit', e.target.value)}
+                        error={!!formErrors.accountLimit}
+                        helperText={formErrors.accountLimit || 'Maksimum kullanılabilir limit'}
+                        InputProps={{
+                          startAdornment: <Typography sx={{ mr: 1 }}>₺</Typography>,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Mevcut Borç"
+                        type="number"
+                        value={formData.currentDebt}
+                        onChange={(e) => handleFormChange('currentDebt', e.target.value)}
+                        error={!!formErrors.currentDebt}
+                        helperText={formErrors.currentDebt || 'Şu anki borç miktarı'}
+                        InputProps={{
+                          startAdornment: <Typography sx={{ mr: 1 }}>₺</Typography>,
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Faiz Oranı (%)"
+                        type="number"
+                        value={formData.interestRate}
+                        onChange={(e) => handleFormChange('interestRate', e.target.value)}
+                        error={!!formErrors.interestRate}
+                        helperText={formErrors.interestRate || 'Yıllık faiz oranı'}
+                        InputProps={{
+                          endAdornment: <Typography sx={{ ml: 1 }}>%</Typography>,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Min. Ödeme Oranı (%)"
+                        type="number"
+                        value={formData.minimumPaymentRate}
+                        onChange={(e) => handleFormChange('minimumPaymentRate', e.target.value)}
+                        helperText="Minimum ödeme yüzdesi"
+                        InputProps={{
+                          endAdornment: <Typography sx={{ ml: 1 }}>%</Typography>,
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <TextField
+                    fullWidth
+                    label="Ödeme Günü (Ayın Kaçı)"
+                    type="number"
+                    value={formData.paymentDueDate}
+                    onChange={(e) => handleFormChange('paymentDueDate', e.target.value)}
+                    inputProps={{ min: 1, max: 31 }}
+                    helperText="Aylık ödeme tarihi (1-31 arası)"
+                  />
+                </Box>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>
