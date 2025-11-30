@@ -53,19 +53,20 @@ class Account {
       } = accountData;
 
       const query = `
-        INSERT INTO accounts (user_id, name, type, balance, overdraft_limit, currency)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO accounts (
+          user_id, name, type, balance, overdraft_limit, currency,
+          bank_id, bank_name, iban, account_number,
+          is_flexible, account_limit, current_debt, interest_rate, 
+          minimum_payment_rate, payment_due_date
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING *
       `;
 
       // Esnek hesap için özel kontroller
-      if (type === 'overdraft') {
-        if (!overdraftLimit || parseFloat(overdraftLimit) <= 0) {
+      if (isFlexible && accountLimit) {
+        if (parseFloat(accountLimit) <= 0) {
           throw new Error('Esnek hesap için geçerli bir limit belirtmelisiniz');
-        }
-        // Esnek hesap başlangıç bakiyesi 0 olmalı
-        if (parseFloat(balance) !== 0) {
-          throw new Error('Esnek hesap başlangıç bakiyesi 0 olmalıdır');
         }
       }
 
@@ -75,7 +76,17 @@ class Account {
         type,
         parseFloat(balance),
         parseFloat(overdraftLimit || 0),
-        currency.toUpperCase()
+        currency.toUpperCase(),
+        bankId || null,
+        bankName ? bankName.trim() : null,
+        iban ? iban.trim() : null,
+        accountNumber ? accountNumber.trim() : null,
+        isFlexible || false,
+        accountLimit ? parseFloat(accountLimit) : null,
+        parseFloat(currentDebt || 0),
+        interestRate ? parseFloat(interestRate) : null,
+        parseFloat(minimumPaymentRate || 5),
+        paymentDueDate ? parseInt(paymentDueDate) : null
       ]);
 
       return new Account(result.rows[0]);
@@ -172,7 +183,16 @@ class Account {
         'overdraft_used', 
         'interest_rate',
         'currency', 
-        'is_active'
+        'is_active',
+        'bank_id',
+        'bank_name',
+        'iban',
+        'account_number',
+        'is_flexible',
+        'account_limit',
+        'current_debt',
+        'minimum_payment_rate',
+        'payment_due_date'
       ];
       
       const updates = [];
