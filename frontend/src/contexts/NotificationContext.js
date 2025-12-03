@@ -176,7 +176,7 @@ export const NotificationProvider = ({ children }) => {
     if (token) {
       fetchNotifications();
     }
-  }, []);
+  }, [fetchNotifications]);
 
   // Poll for new notifications every 60 seconds
   useEffect(() => {
