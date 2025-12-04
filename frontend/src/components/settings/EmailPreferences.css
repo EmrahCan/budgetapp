@@ -250,6 +250,35 @@ input:disabled + .toggle-slider {
   border-top: 2px solid #f0f0f0;
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-test {
+  padding: 12px 24px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-test:hover:not(:disabled) {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-test:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-test:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-save {

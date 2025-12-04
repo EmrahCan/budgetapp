@@ -7,6 +7,7 @@ const EmailPreferences = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
   const [preferences, setPreferences] = useState({
@@ -83,6 +84,32 @@ const EmailPreferences = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleSendTestEmail = async () => {
+    try {
+      setSendingTest(true);
+      setMessage({ type: '', text: '' });
+
+      const response = await emailAPI.testEmail();
+
+      if (response.data.success) {
+        setMessage({
+          type: 'success',
+          text: t('emailPreferences.testEmailSent') || 'Test email sent successfully! Check your inbox.',
+        });
+        
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || t('emailPreferences.testEmailError') || 'Failed to send test email',
+      });
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   if (loading) {
@@ -285,6 +312,13 @@ const EmailPreferences = () => {
       </div>
 
       <div className="email-preferences-actions">
+        <button
+          className="btn-test"
+          onClick={handleSendTestEmail}
+          disabled={sendingTest || !preferences.email_enabled}
+        >
+          {sendingTest ? (t('common.sending') || 'Sending...') : (t('emailPreferences.sendTestEmail') || 'Send Test Email')}
+        </button>
         <button
           className="btn-save"
           onClick={handleSave}

@@ -449,3 +449,12 @@
   }
 }
 
+
+  "emailPreferences": {
+    "sendTestEmail": "Test E-postası Gönder",
+    "testEmailSent": "Test e-postası başarıyla gönderildi! Gelen kutunuzu kontrol edin.",
+    "testEmailError": "Test e-postası gönderilemedi"
+  },
+  "common": {
+    "sending": "Gönderiliyor..."
+  }
