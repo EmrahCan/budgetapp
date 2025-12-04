@@ -1,3 +1,118 @@
+#!/bin/bash
+# Production VM'de Email Preferences düzeltmeleri
+
+echo "🚀 Production Email Preferences Fix Deployment"
+echo "=============================================="
+
+# Renk kodları
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Hata kontrolü
+set -e
+
+echo ""
+echo "${YELLOW}📝 Step 1: Updating translation files...${NC}"
+
+# TR translation
+cat > /home/azureuser/budgetapp/frontend/src/i18n/locales/tr.json << 'JSONEOF'
+{
+  "common": {
+    "appTitle": "Bütçe Yönetimi",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "sending": "Gönderiliyor...",
+    "saving": "Kaydediliyor...",
+    "loading": "Yükleniyor..."
+  },
+  "emailPreferences": {
+    "title": "E-posta Bildirimleri",
+    "description": "E-posta bildirim tercihlerinizi yönetin",
+    "emailEnabled": "E-posta Bildirimleri",
+    "emailEnabledHelp": "Tüm e-posta bildirimlerini etkinleştir/devre dışı bırak",
+    "dailyDigest": "Günlük Özet",
+    "dailyDigestEnabled": "Günlük özet e-postası gönder",
+    "dailyDigestHelp": "Günlük harcama özetinizi e-posta ile alın",
+    "digestTime": "Gönderim Saati",
+    "digestTimeHelp": "Günlük özetin gönderileceği saat",
+    "reports": "Raporlar",
+    "reportEmailsEnabled": "Rapor e-postaları gönder",
+    "reportEmailsHelp": "Periyodik harcama raporlarını e-posta ile alın",
+    "reportFrequency": "Rapor Sıklığı",
+    "reportFrequencyHelp": "Raporların ne sıklıkla gönderileceği",
+    "daily": "Günlük",
+    "weekly": "Haftalık",
+    "monthly": "Aylık",
+    "alerts": "Uyarılar",
+    "criticalAlertsEnabled": "Kritik uyarıları gönder",
+    "criticalAlertsHelp": "Önemli durumlar için anında e-posta uyarıları",
+    "language": "Dil",
+    "emailLanguage": "E-posta Dili",
+    "emailLanguageHelp": "E-postaların gönderileceği dil",
+    "sendTestEmail": "Test E-postası Gönder",
+    "testEmailSent": "Test e-postası başarıyla gönderildi! Gelen kutunuzu kontrol edin.",
+    "testEmailError": "Test e-postası gönderilemedi",
+    "fetchError": "Tercihler yüklenemedi",
+    "saveSuccess": "Tercihler başarıyla kaydedildi",
+    "saveError": "Tercihler kaydedilemedi"
+  }
+}
+JSONEOF
+
+# EN translation
+cat > /home/azureuser/budgetapp/frontend/src/i18n/locales/en.json << 'JSONEOF'
+{
+  "common": {
+    "appTitle": "Budget Management",
+    "save": "Save",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "saving": "Saving...",
+    "loading": "Loading..."
+  },
+  "emailPreferences": {
+    "title": "Email Notifications",
+    "description": "Manage your email notification preferences",
+    "emailEnabled": "Email Notifications",
+    "emailEnabledHelp": "Enable/disable all email notifications",
+    "dailyDigest": "Daily Digest",
+    "dailyDigestEnabled": "Send daily digest email",
+    "dailyDigestHelp": "Receive daily spending summary via email",
+    "digestTime": "Send Time",
+    "digestTimeHelp": "Time when daily digest will be sent",
+    "reports": "Reports",
+    "reportEmailsEnabled": "Send report emails",
+    "reportEmailsHelp": "Receive periodic spending reports via email",
+    "reportFrequency": "Report Frequency",
+    "reportFrequencyHelp": "How often reports will be sent",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "alerts": "Alerts",
+    "criticalAlertsEnabled": "Send critical alerts",
+    "criticalAlertsHelp": "Instant email alerts for important situations",
+    "language": "Language",
+    "emailLanguage": "Email Language",
+    "emailLanguageHelp": "Language for email notifications",
+    "sendTestEmail": "Send Test Email",
+    "testEmailSent": "Test email sent successfully! Check your inbox.",
+    "testEmailError": "Failed to send test email",
+    "fetchError": "Failed to load preferences",
+    "saveSuccess": "Preferences saved successfully",
+    "saveError": "Failed to save preferences"
+  }
+}
+JSONEOF
+
+echo "${GREEN}✅ Translation files updated${NC}"
+
+echo ""
+echo "${YELLOW}📝 Step 2: Updating backend email routes (GET -> POST)...${NC}"
+
+# Backend email routes - /test endpoint'ini POST yap
+cat > /home/azureuser/budgetapp/backend/routes/email.js << 'EOF'
 const express = require('express');
 const router = express.Router();
 const emailService = require('../services/emailService');
@@ -56,7 +171,6 @@ router.post('/test', authenticateToken, async (req, res) => {
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const stats = emailService.getStats();
-
     return res.json({
       success: true,
       data: stats,
@@ -79,7 +193,6 @@ router.get('/stats', authenticateToken, async (req, res) => {
 router.get('/health', authenticateToken, async (req, res) => {
   try {
     const health = await emailService.healthCheck();
-
     return res.json({
       success: true,
       data: health,
@@ -94,8 +207,6 @@ router.get('/health', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
-
 /**
  * @route   GET /api/email/preferences
  * @desc    Get user email preferences
@@ -104,7 +215,6 @@ module.exports = router;
 router.get('/preferences', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-
     const preferences = await EmailPreferences.getByUserId(userId);
 
     return res.json({
@@ -246,3 +356,54 @@ router.get('/delivery-logs', authenticateToken, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
+EOF
+
+echo "${GREEN}✅ Backend email routes updated${NC}"
+
+echo ""
+echo "${YELLOW}📝 Step 3: Rebuilding Docker containers...${NC}"
+
+cd /home/azureuser/budgetapp
+
+# Frontend rebuild
+echo "Building frontend..."
+docker-compose build --no-cache frontend
+
+# Backend rebuild
+echo "Building backend..."
+docker-compose build --no-cache backend
+
+echo "${GREEN}✅ Containers rebuilt${NC}"
+
+echo ""
+echo "${YELLOW}📝 Step 4: Restarting containers...${NC}"
+
+docker-compose up -d
+
+echo "${GREEN}✅ Containers restarted${NC}"
+
+echo ""
+echo "${YELLOW}📝 Step 5: Checking container status...${NC}"
+
+docker-compose ps
+
+echo ""
+echo "${YELLOW}📝 Step 6: Testing backend endpoint...${NC}"
+
+sleep 5
+
+# Test endpoint
+docker exec budget_backend curl -s -X POST http://localhost:5001/api/email/test \
+  -H "Content-Type: application/json" || echo "Endpoint test failed (expected - needs auth)"
+
+echo ""
+echo "=============================================="
+echo "${GREEN}✅ Deployment completed!${NC}"
+echo ""
+echo "Test etmek için:"
+echo "1. https://budgetapp.site/profile sayfasını yenileyin"
+echo "2. Translation'ların düzgün göründüğünü kontrol edin"
+echo "3. 'Test E-postası Gönder' butonuna tıklayın"
+echo ""

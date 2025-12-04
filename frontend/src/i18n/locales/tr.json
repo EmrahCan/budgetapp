@@ -422,39 +422,32 @@
   "emailPreferences": {
     "title": "E-posta Bildirimleri",
     "description": "E-posta bildirim tercihlerinizi yönetin",
-    "emailEnabled": "E-posta Bildirimlerini Etkinleştir",
-    "emailEnabledHelp": "Tüm e-posta bildirimlerini kapat",
+    "emailEnabled": "E-posta Bildirimleri",
+    "emailEnabledHelp": "Tüm e-posta bildirimlerini etkinleştir/devre dışı bırak",
     "dailyDigest": "Günlük Özet",
-    "dailyDigestEnabled": "Günlük Özet E-postası",
-    "dailyDigestHelp": "Bildirimlerinizin günlük özetini alın",
-    "digestTime": "Tercih Edilen Saat",
-    "digestTimeHelp": "Günlük özetinizi hangi saatte gönderelim?",
-    "reports": "Finansal Raporlar",
-    "reportEmailsEnabled": "Rapor E-postaları",
-    "reportEmailsHelp": "E-posta ile finansal raporlar alın",
+    "dailyDigestEnabled": "Günlük özet e-postası gönder",
+    "dailyDigestHelp": "Günlük harcama özetinizi e-posta ile alın",
+    "digestTime": "Gönderim Saati",
+    "digestTimeHelp": "Günlük özetin gönderileceği saat",
+    "reports": "Raporlar",
+    "reportEmailsEnabled": "Rapor e-postaları gönder",
+    "reportEmailsHelp": "Periyodik harcama raporlarını e-posta ile alın",
     "reportFrequency": "Rapor Sıklığı",
-    "reportFrequencyHelp": "Raporları ne sıklıkla gönderelim?",
+    "reportFrequencyHelp": "Raporların ne sıklıkla gönderileceği",
     "daily": "Günlük",
     "weekly": "Haftalık",
     "monthly": "Aylık",
-    "alerts": "Kritik Uyarılar",
-    "criticalAlertsEnabled": "Kritik Uyarılar",
-    "criticalAlertsHelp": "Bütçe limitleri ve gecikmiş ödemeler için anında uyarı alın",
-    "language": "E-posta Dili",
-    "emailLanguage": "Tercih Edilen Dil",
-    "emailLanguageHelp": "E-posta bildirimleri için dil",
+    "alerts": "Uyarılar",
+    "criticalAlertsEnabled": "Kritik uyarıları gönder",
+    "criticalAlertsHelp": "Önemli durumlar için anında e-posta uyarıları",
+    "language": "Dil",
+    "emailLanguage": "E-posta Dili",
+    "emailLanguageHelp": "E-postaların gönderileceği dil",
+    "sendTestEmail": "Test E-postası Gönder",
+    "testEmailSent": "Test e-postası başarıyla gönderildi! Gelen kutunuzu kontrol edin.",
+    "testEmailError": "Test e-postası gönderilemedi",
     "fetchError": "Tercihler yüklenemedi",
     "saveSuccess": "Tercihler başarıyla kaydedildi",
     "saveError": "Tercihler kaydedilemedi"
   }
 }
-
-
-  "emailPreferences": {
-    "sendTestEmail": "Test E-postası Gönder",
-    "testEmailSent": "Test e-postası başarıyla gönderildi! Gelen kutunuzu kontrol edin.",
-    "testEmailError": "Test e-postası gönderilemedi"
-  },
-  "common": {
-    "sending": "Gönderiliyor..."
-  }

@@ -57,7 +57,9 @@
     "of": "of",
     "entries": "entries",
     "noData": "No data found",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "sending": "Sending...",
+    "saving": "Saving..."
   },
   "auth": {
     "login": "Login",
@@ -422,38 +424,32 @@
   "emailPreferences": {
     "title": "Email Notifications",
     "description": "Manage your email notification preferences",
-    "emailEnabled": "Enable Email Notifications",
-    "emailEnabledHelp": "Turn off all email notifications",
+    "emailEnabled": "Email Notifications",
+    "emailEnabledHelp": "Enable/disable all email notifications",
     "dailyDigest": "Daily Digest",
-    "dailyDigestEnabled": "Daily Digest Email",
-    "dailyDigestHelp": "Receive a daily summary of your notifications",
-    "digestTime": "Preferred Time",
-    "digestTimeHelp": "What time should we send your daily digest?",
-    "reports": "Financial Reports",
-    "reportEmailsEnabled": "Report Emails",
-    "reportEmailsHelp": "Receive financial reports via email",
+    "dailyDigestEnabled": "Send daily digest email",
+    "dailyDigestHelp": "Receive daily spending summary via email",
+    "digestTime": "Send Time",
+    "digestTimeHelp": "Time when daily digest will be sent",
+    "reports": "Reports",
+    "reportEmailsEnabled": "Send report emails",
+    "reportEmailsHelp": "Receive periodic spending reports via email",
     "reportFrequency": "Report Frequency",
-    "reportFrequencyHelp": "How often should we send reports?",
+    "reportFrequencyHelp": "How often reports will be sent",
     "daily": "Daily",
     "weekly": "Weekly",
     "monthly": "Monthly",
-    "alerts": "Critical Alerts",
-    "criticalAlertsEnabled": "Critical Alerts",
-    "criticalAlertsHelp": "Receive immediate alerts for budget limits and overdue payments",
-    "language": "Email Language",
-    "emailLanguage": "Preferred Language",
+    "alerts": "Alerts",
+    "criticalAlertsEnabled": "Send critical alerts",
+    "criticalAlertsHelp": "Instant email alerts for important situations",
+    "language": "Language",
+    "emailLanguage": "Email Language",
     "emailLanguageHelp": "Language for email notifications",
+    "sendTestEmail": "Send Test Email",
+    "testEmailSent": "Test email sent successfully! Check your inbox.",
+    "testEmailError": "Failed to send test email",
     "fetchError": "Failed to load preferences",
     "saveSuccess": "Preferences saved successfully",
     "saveError": "Failed to save preferences"
   }
 }
-
-  "emailPreferences": {
-    "sendTestEmail": "Send Test Email",
-    "testEmailSent": "Test email sent successfully! Check your inbox.",
-    "testEmailError": "Failed to send test email"
-  },
-  "common": {
-    "sending": "Sending..."
-  }
