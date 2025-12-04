@@ -9,6 +9,7 @@ import { AIProvider } from './contexts/AIContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import Layout from './components/layout/Layout';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import Dashboard from './pages/Dashboard';
@@ -25,6 +26,7 @@ import PaymentCalendarPage from './pages/calendar/PaymentCalendarPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import SystemHealthIndicator from './components/common/SystemHealthIndicator';
+import PublicRoute from './components/auth/PublicRoute';
 
 function App() {
   // Perform startup checks
@@ -50,42 +52,46 @@ function App() {
             <Router>
               <Routes>
                 {/* Public routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="dashboard-new" element={<DashboardNew />} />
-                <Route path="accounts" element={<AccountsPage />} />
-                <Route path="overdrafts" element={<OverdraftsPage />} />
-                <Route path="credit-cards" element={<CreditCardsDashboard />} />
-                <Route path="transactions" element={<TransactionsPage />} />
-                <Route path="fixed-payments" element={<FixedPaymentsPage />} />
-                <Route path="installment-payments" element={<InstallmentPaymentsPage />} />
-                <Route path="payment-calendar" element={<PaymentCalendarPage />} />
-                <Route path="reports" element={<ReportsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
                 
-                {/* Admin Routes */}
-                <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-              </Route>
+                {/* Landing Page */}
+                <Route path="/landing" element={<LandingPage />} />
               
-              {/* Redirect unknown routes to dashboard */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="dashboard-new" element={<DashboardNew />} />
+                  <Route path="accounts" element={<AccountsPage />} />
+                  <Route path="overdrafts" element={<OverdraftsPage />} />
+                  <Route path="credit-cards" element={<CreditCardsDashboard />} />
+                  <Route path="transactions" element={<TransactionsPage />} />
+                  <Route path="fixed-payments" element={<FixedPaymentsPage />} />
+                  <Route path="installment-payments" element={<InstallmentPaymentsPage />} />
+                  <Route path="payment-calendar" element={<PaymentCalendarPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                  <Route path="admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                </Route>
+              
+                {/* Redirect unknown routes to dashboard */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             
-            {/* System Health Indicator - only show in development or when issues occur */}
-            <SystemHealthIndicator 
-              position="bottom-left"
-              autoHide={process.env.NODE_ENV === 'production'}
-            />
-          </Router>
+              {/* System Health Indicator - only show in development or when issues occur */}
+              <SystemHealthIndicator 
+                position="bottom-left"
+                autoHide={process.env.NODE_ENV === 'production'}
+              />
+            </Router>
           </AIProvider>
         </NotificationProvider>
       </AuthProvider>

@@ -380,5 +380,43 @@
         "daysAgo": "{{count}} days ago"
       }
     }
+  },
+  "landing": {
+    "brand": "BudgetApp",
+    "login": "Login",
+    "switchLanguage": "Switch Language",
+    "hero": {
+      "badge": "100% Free • Unlimited Usage",
+      "headline": "Manage Your",
+      "headlineHighlight": "Financial Future",
+      "subheadline": "Reach your financial goals with smart budget management. Track your accounts, analyze your spending, and plan your future.",
+      "cta": "Start Free",
+      "learnMore": "Learn More",
+      "trust1": "No credit card required",
+      "trust2": "Start instantly",
+      "trust3": "Secure and private"
+    },
+    "features": {
+      "badge": "FEATURES",
+      "title": "Simplify Your",
+      "titleHighlight": "Financial Management",
+      "subtitle": "All the tools you need in one platform",
+      "accounts": {
+        "title": "Account Management",
+        "description": "Manage and track all your accounts from one place. Easily organize your bank accounts, credit cards, and cash accounts."
+      },
+      "notifications": {
+        "title": "Smart Notifications",
+        "description": "Get timely notifications for important financial events. Reminders for bill payments, installment dates, and budget limits."
+      },
+      "reports": {
+        "title": "Reports & Analytics",
+        "description": "Analyze your spending with detailed reports. Income-expense tracking, category-based analysis, and trend charts."
+      },
+      "stat1": "Free",
+      "stat2": "Unlimited Accounts",
+      "stat3": "Access",
+      "stat4": "Secure"
+    }
   }
 }

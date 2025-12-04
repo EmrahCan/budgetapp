@@ -12,6 +12,9 @@ const logger = require('./utils/logger');
 // Import notification generator service
 const notificationGeneratorService = require('./services/notificationGeneratorService');
 
+// Import email service
+const emailService = require('./services/emailService');
+
 // Import health monitoring
 const {
   healthCheckMiddleware,
@@ -176,13 +179,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger.requestMiddleware);
 
 // Basic health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const emailHealth = await emailService.healthCheck();
+  
   res.status(200).json({ 
     status: 'OK', 
     message: 'Budget App Backend is running',
     timestamp: new Date().toISOString(),
     memory: process.memoryUsage(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    services: {
+      email: emailHealth
+    }
   });
 });
 
@@ -243,6 +251,10 @@ app.use('*', (req, res) => {
 // Initialize services - simplified for stability
 async function initializeServices() {
   try {
+    // Initialize email service
+    await emailService.initialize();
+    logger.info('Email service initialized');
+
     // Initialize scheduled notification job
     // Runs daily at 6:00 AM
     cron.schedule('0 6 * * *', async () => {

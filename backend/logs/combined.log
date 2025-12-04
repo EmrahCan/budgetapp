@@ -2874,3 +2874,9 @@
   level: 'info',
   message: 'HTTP Request'
 }
+{
+  message: 'Email service is disabled',
+  level: 'info',
+  service: 'budget-backend',
+  timestamp: '2025-12-03 19:24:58'
+}

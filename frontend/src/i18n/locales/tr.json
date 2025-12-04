@@ -380,6 +380,44 @@
         "daysAgo": "{{count}} gün önce"
       }
     }
+  },
+  "landing": {
+    "brand": "BudgetApp",
+    "login": "Giriş Yap",
+    "switchLanguage": "Dil Değiştir",
+    "hero": {
+      "badge": "100% Ücretsiz • Sınırsız Kullanım",
+      "headline": "Finansal Geleceğinizi",
+      "headlineHighlight": "Yönetin",
+      "subheadline": "Akıllı bütçe yönetimi ile finansal hedeflerinize ulaşın. Hesaplarınızı takip edin, harcamalarınızı analiz edin ve geleceğinizi planlayın.",
+      "cta": "Ücretsiz Başlayın",
+      "learnMore": "Daha Fazla Bilgi",
+      "trust1": "Kredi kartı gerektirmez",
+      "trust2": "Anında başlayın",
+      "trust3": "Güvenli ve özel"
+    },
+    "features": {
+      "badge": "ÖZELLİKLER",
+      "title": "Finansal Yönetimi",
+      "titleHighlight": "Kolaylaştırın",
+      "subtitle": "İhtiyacınız olan tüm araçlar tek bir platformda",
+      "accounts": {
+        "title": "Hesap Yönetimi",
+        "description": "Tüm hesaplarınızı tek yerden yönetin ve takip edin. Banka hesapları, kredi kartları ve nakit hesaplarınızı kolayca organize edin."
+      },
+      "notifications": {
+        "title": "Akıllı Bildirimler",
+        "description": "Önemli finansal olaylar için zamanında bildirim alın. Fatura ödemeleri, taksit tarihleri ve bütçe limitleri için hatırlatmalar."
+      },
+      "reports": {
+        "title": "Raporlar ve Analiz",
+        "description": "Detaylı raporlar ile harcamalarınızı analiz edin. Gelir-gider takibi, kategori bazlı analizler ve trend grafikleri."
+      },
+      "stat1": "Ücretsiz",
+      "stat2": "Sınırsız Hesap",
+      "stat3": "Erişim",
+      "stat4": "Güvenli"
+    }
   }
 }
 

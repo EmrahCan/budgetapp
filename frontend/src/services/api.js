@@ -593,6 +593,13 @@ const aggregateMockData = (filters) => {
   };
 };
 
+// Email API
+export const emailAPI = {
+  getPreferences: () => api.get('/email/preferences'),
+  updatePreferences: (data) => api.put('/email/preferences', data),
+  testEmail: () => api.post('/email/test'),
+};
+
 // AI API
 export const aiAPI = {
   // Health check
