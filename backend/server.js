@@ -178,20 +178,55 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging middleware
 app.use(logger.requestMiddleware);
 
-// Basic health check endpoint
+// Enhanced health check endpoint with email metrics
 app.get('/health', async (req, res) => {
-  const emailHealth = await emailService.healthCheck();
-  
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'Budget App Backend is running',
-    timestamp: new Date().toISOString(),
-    memory: process.memoryUsage(),
-    uptime: process.uptime(),
-    services: {
-      email: emailHealth
+  try {
+    const emailHealth = await emailService.healthCheck();
+    
+    // Get email delivery stats from database
+    let emailMetrics = null;
+    try {
+      const EmailDeliveryLog = require('./models/EmailDeliveryLog');
+      const stats = await EmailDeliveryLog.getStats();
+      emailMetrics = {
+        totalEmails: stats.totals.total,
+        sent: stats.totals.sent,
+        failed: stats.totals.failed,
+        queued: stats.totals.queued,
+        successRate: stats.successRate,
+      };
+    } catch (error) {
+      logger.error('Failed to get email metrics for health check', { error: error.message });
     }
-  });
+    
+    // Check if email service is healthy
+    const isEmailHealthy = emailHealth.status === 'healthy' && emailHealth.enabled;
+    
+    // Overall health status
+    const overallStatus = isEmailHealthy ? 'OK' : 'DEGRADED';
+    
+    res.status(200).json({ 
+      status: overallStatus, 
+      message: 'Budget App Backend is running',
+      timestamp: new Date().toISOString(),
+      memory: process.memoryUsage(),
+      uptime: process.uptime(),
+      services: {
+        email: {
+          ...emailHealth,
+          metrics: emailMetrics,
+        }
+      }
+    });
+  } catch (error) {
+    logger.error('Health check error', { error: error.message });
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Health check failed',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // API routes
@@ -207,6 +242,7 @@ const enhancedReportRoutes = require('./routes/enhancedReports');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
 const notificationRoutes = require('./routes/notifications');
+const emailRoutes = require('./routes/email');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/credit-cards', creditCardRoutes);
@@ -216,6 +252,7 @@ app.use('/api/fixed-payments', fixedPaymentRoutes);
 app.use('/api/installment-payments', installmentPaymentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/email', emailRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/reports/optimized', optimizedReportRoutes);
 app.use('/api/reports/enhanced', enhancedReportRoutes);

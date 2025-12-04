@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import EmailPreferences from '../../components/settings/EmailPreferences';
 
 const ProfilePage = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -306,6 +307,11 @@ const ProfilePage = () => {
             </Card>
           </Grid>
         </Grid>
+
+        {/* Email Preferences Section */}
+        <Box sx={{ mt: 4 }}>
+          <EmailPreferences />
+        </Box>
 
         {/* Password Change Dialog */}
         <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} maxWidth="sm" fullWidth>

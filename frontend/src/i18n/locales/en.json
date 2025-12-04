@@ -418,5 +418,33 @@
       "stat3": "Access",
       "stat4": "Secure"
     }
+  },
+  "emailPreferences": {
+    "title": "Email Notifications",
+    "description": "Manage your email notification preferences",
+    "emailEnabled": "Enable Email Notifications",
+    "emailEnabledHelp": "Turn off all email notifications",
+    "dailyDigest": "Daily Digest",
+    "dailyDigestEnabled": "Daily Digest Email",
+    "dailyDigestHelp": "Receive a daily summary of your notifications",
+    "digestTime": "Preferred Time",
+    "digestTimeHelp": "What time should we send your daily digest?",
+    "reports": "Financial Reports",
+    "reportEmailsEnabled": "Report Emails",
+    "reportEmailsHelp": "Receive financial reports via email",
+    "reportFrequency": "Report Frequency",
+    "reportFrequencyHelp": "How often should we send reports?",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "alerts": "Critical Alerts",
+    "criticalAlertsEnabled": "Critical Alerts",
+    "criticalAlertsHelp": "Receive immediate alerts for budget limits and overdue payments",
+    "language": "Email Language",
+    "emailLanguage": "Preferred Language",
+    "emailLanguageHelp": "Language for email notifications",
+    "fetchError": "Failed to load preferences",
+    "saveSuccess": "Preferences saved successfully",
+    "saveError": "Failed to save preferences"
   }
 }

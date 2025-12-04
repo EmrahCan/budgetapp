@@ -1,9 +1,9 @@
 const { Resend } = require('resend');
 const logger = require('../utils/logger');
+const EmailDeliveryLog = require('../models/EmailDeliveryLog');
 
 /**
  * EmailService - Handles email sending via Resend API
- * Manages email composition, delivery, and tracking
  */
 class EmailService {
   constructor() {
@@ -14,10 +14,23 @@ class EmailService {
       fromEmail: process.env.RESEND_FROM_EMAIL || 'notifications@budgetapp.site',
       fromName: process.env.RESEND_FROM_NAME || 'Budget App',
       enabled: process.env.EMAIL_ENABLED === 'true',
-      batchSize: parseInt(process.env.EMAIL_BATCH_SIZE || '50'),
-      rateLimitPerMinute: parseInt(process.env.EMAIL_RATE_LIMIT_PER_MINUTE || '100'),
-      retryAttempts: parseInt(process.env.EMAIL_RETRY_ATTEMPTS || '3'),
-      retryDelay: parseInt(process.env.EMAIL_RETRY_DELAY_MS || '2000'),
+      batchSize: parseInt(process.env.EMAIL_BATCH_SIZE) || 50,
+      rateLimitPerMinute: parseInt(process.env.EMAIL_RATE_LIMIT_PER_MINUTE) || 100,
+      retryAttempts: parseInt(process.env.EMAIL_RETRY_ATTEMPTS) || 3,
+      retryDelay: parseInt(process.env.EMAIL_RETRY_DELAY_MS) || 2000,
+    };
+    this.stats = {
+      sent: 0,
+      failed: 0,
+      pending: 0,
+    };
+    // Circuit breaker state
+    this.circuitBreaker = {
+      consecutiveFailures: 0,
+      isOpen: false,
+      openedAt: null,
+      resetTimeout: 5 * 60 * 1000, // 5 minutes
+      failureThreshold: 10, // Open after 10 consecutive failures
     };
   }
 
@@ -31,253 +44,321 @@ class EmailService {
         return;
       }
 
-      if (!this.config.apiKey || this.config.apiKey === 're_test_key_placeholder') {
-        logger.warn('Resend API key not configured - email service disabled');
-        this.config.enabled = false;
-        return;
+      if (!this.config.apiKey) {
+        logger.error('RESEND_API_KEY is not configured');
+        throw new Error('RESEND_API_KEY is required');
+      }
+
+      // Validate API key format
+      if (!this.config.apiKey.startsWith('re_')) {
+        logger.error('Invalid RESEND_API_KEY format');
+        throw new Error('RESEND_API_KEY must start with "re_"');
       }
 
       // Initialize Resend client
       this.resend = new Resend(this.config.apiKey);
       
-      // Test the connection (optional - Resend doesn't have a ping endpoint)
-      logger.info('Resend email service initialized', {
+      // Test the API key by attempting to get API info (if available)
+      // For now, we'll just mark as initialized
+      this.initialized = true;
+
+      logger.info('Email service initialized successfully', {
         fromEmail: this.config.fromEmail,
         fromName: this.config.fromName,
+        batchSize: this.config.batchSize,
+        rateLimit: this.config.rateLimitPerMinute,
       });
-
-      this.initialized = true;
     } catch (error) {
       logger.error('Failed to initialize email service', { error: error.message });
-      this.config.enabled = false;
+      this.initialized = false;
+      
+      // If API key is invalid, disable email functionality
+      if (error.message.includes('API_KEY')) {
+        this.config.enabled = false;
+        logger.error('Email functionality disabled due to invalid API key');
+      }
+      
       throw error;
     }
   }
 
   /**
-   * Send an email via Resend API
-   * @param {Object} options - Email options
-   * @param {string} options.to - Recipient email address
-   * @param {string} options.subject - Email subject
-   * @param {string} options.html - HTML content
-   * @param {string} options.text - Plain text content (optional)
-   * @returns {Object} Result with success status and message ID
+   * Check and reset circuit breaker if timeout has passed
    */
-  async sendEmail({ to, subject, html, text }) {
+  checkCircuitBreaker() {
+    if (this.circuitBreaker.isOpen) {
+      const now = Date.now();
+      const timeSinceOpen = now - this.circuitBreaker.openedAt;
+      
+      if (timeSinceOpen >= this.circuitBreaker.resetTimeout) {
+        logger.info('Circuit breaker reset - attempting to resume email sending');
+        this.circuitBreaker.isOpen = false;
+        this.circuitBreaker.consecutiveFailures = 0;
+        this.circuitBreaker.openedAt = null;
+      }
+    }
+  }
+
+  /**
+   * Record email failure for circuit breaker
+   */
+  recordFailure() {
+    this.circuitBreaker.consecutiveFailures++;
+    
+    if (this.circuitBreaker.consecutiveFailures >= this.circuitBreaker.failureThreshold) {
+      if (!this.circuitBreaker.isOpen) {
+        this.circuitBreaker.isOpen = true;
+        this.circuitBreaker.openedAt = Date.now();
+        logger.error('Circuit breaker opened - email sending paused', {
+          consecutiveFailures: this.circuitBreaker.consecutiveFailures,
+          threshold: this.circuitBreaker.failureThreshold,
+        });
+      }
+    } else if (this.circuitBreaker.consecutiveFailures >= 5) {
+      // Warning after 5 failures
+      logger.warn('Email delivery rate dropping', {
+        consecutiveFailures: this.circuitBreaker.consecutiveFailures,
+        threshold: this.circuitBreaker.failureThreshold,
+      });
+    }
+  }
+
+  /**
+   * Record email success for circuit breaker
+   */
+  recordSuccess() {
+    if (this.circuitBreaker.consecutiveFailures > 0) {
+      logger.info('Email delivery recovered', {
+        previousFailures: this.circuitBreaker.consecutiveFailures,
+      });
+    }
+    this.circuitBreaker.consecutiveFailures = 0;
+  }
+
+  /**
+   * Send an email via Resend API with delivery logging
+   */
+  async sendEmail(to, subject, html, text = null, options = {}) {
+    const { userId = null, emailType = 'test', retryCount = 0 } = options;
+    let deliveryLogId = null;
+
     try {
-      if (!this.config.enabled) {
-        logger.warn('Email service is disabled - skipping email send');
-        return {
-          success: false,
-          error: 'Email service is disabled',
-        };
-      }
-
       if (!this.initialized) {
-        await this.initialize();
+        throw new Error('Email service not initialized');
       }
 
-      // Validate inputs
-      if (!to || !subject || !html) {
-        throw new Error('Missing required email fields: to, subject, html');
+      if (!this.config.enabled) {
+        logger.info('Email sending skipped (service disabled)', { to, subject });
+        
+        // Log as skipped
+        if (userId) {
+          await EmailDeliveryLog.create({
+            userId,
+            emailType,
+            recipientEmail: to,
+            subject,
+            status: 'failed',
+            errorMessage: 'Email service disabled',
+            retryCount,
+          });
+        }
+        
+        return { success: false, reason: 'service_disabled' };
       }
 
-      // Send email via Resend
+      // Check circuit breaker
+      this.checkCircuitBreaker();
+      
+      if (this.circuitBreaker.isOpen) {
+        logger.warn('Email sending blocked by circuit breaker', { to, subject });
+        
+        if (userId) {
+          await EmailDeliveryLog.create({
+            userId,
+            emailType,
+            recipientEmail: to,
+            subject,
+            status: 'failed',
+            errorMessage: 'Circuit breaker open - too many failures',
+            retryCount,
+          });
+        }
+        
+        return { success: false, reason: 'circuit_breaker_open' };
+      }
+
+      // Validate email address
+      if (!this.isValidEmail(to)) {
+        throw new Error(`Invalid email address: ${to}`);
+      }
+
+      // Create initial log entry
+      if (userId) {
+        const log = await EmailDeliveryLog.create({
+          userId,
+          emailType,
+          recipientEmail: to,
+          subject,
+          status: 'queued',
+          retryCount,
+        });
+        deliveryLogId = log.id;
+      }
+
+      logger.info('Sending email', { to, subject, deliveryLogId });
+
+      // Send via Resend
       const result = await this.resend.emails.send({
         from: `${this.config.fromName} <${this.config.fromEmail}>`,
         to: [to],
-        subject,
-        html,
+        subject: subject,
+        html: html,
         text: text || this.stripHtml(html),
       });
+
+      const messageId = result.data?.id || result.id;
+      this.stats.sent++;
+
+      // Record success for circuit breaker
+      this.recordSuccess();
+
+      // Update log with success
+      if (deliveryLogId) {
+        await EmailDeliveryLog.updateStatus(deliveryLogId, 'sent', null, messageId);
+      }
 
       logger.info('Email sent successfully', {
         to,
         subject,
-        messageId: result.id,
+        messageId,
+        deliveryLogId,
       });
 
       return {
         success: true,
-        messageId: result.id,
+        messageId,
+        deliveryLogId,
       };
-
     } catch (error) {
+      this.stats.failed++;
+
+      // Record failure for circuit breaker
+      this.recordFailure();
+
+      // Detect rate limit errors
+      const isRateLimit = error.message?.includes('rate limit') || 
+                          error.statusCode === 429;
+
+      // Update log with failure
+      if (deliveryLogId) {
+        await EmailDeliveryLog.updateStatus(
+          deliveryLogId,
+          'failed',
+          error.message
+        );
+      } else if (userId) {
+        // Create failure log if we didn't create one earlier
+        await EmailDeliveryLog.create({
+          userId,
+          emailType,
+          recipientEmail: to,
+          subject,
+          status: 'failed',
+          errorMessage: error.message,
+          retryCount,
+        });
+      }
+
       logger.error('Failed to send email', {
-        error: error.message,
         to,
         subject,
+        error: error.message,
+        isRateLimit,
+        statusCode: error.statusCode,
+        deliveryLogId,
+        circuitBreakerFailures: this.circuitBreaker.consecutiveFailures,
       });
 
-      // Check for specific Resend errors
-      if (error.message.includes('rate limit')) {
-        return {
-          success: false,
-          error: 'Rate limit exceeded',
-          retryable: true,
-        };
-      }
-
-      if (error.message.includes('invalid')) {
-        return {
-          success: false,
-          error: 'Invalid email configuration',
-          retryable: false,
-        };
-      }
-
       return {
         success: false,
         error: error.message,
-        retryable: true,
+        isRateLimit,
+        shouldRetry: isRateLimit || error.statusCode >= 500,
+        deliveryLogId,
       };
     }
   }
 
   /**
-   * Send daily digest email to a user
-   * @param {number} userId - User ID
-   * @param {Object} options - Digest options
-   * @returns {Object} Result
+   * Send a test email
    */
-  async sendDailyDigest(userId, options = {}) {
-    try {
-      // TODO: Implement in next task
-      logger.info('sendDailyDigest called', { userId, options });
-      
-      return {
-        success: false,
-        error: 'Not implemented yet',
-      };
-    } catch (error) {
-      logger.error('Failed to send daily digest', { error: error.message, userId });
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+  async sendTestEmail(to) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #4F46E5;">Budget App Test Email</h1>
+        <p>This is a test email from Budget App email service.</p>
+        <p>If you received this email, the email service is working correctly!</p>
+        <hr style="border: 1px solid #E5E7EB; margin: 20px 0;">
+        <p style="color: #6B7280; font-size: 12px;">
+          This is an automated test email from Budget App.
+        </p>
+      </div>
+    `;
+
+    return await this.sendEmail(
+      to,
+      'Budget App - Test Email',
+      html
+    );
   }
 
   /**
-   * Send report email to a user
-   * @param {number} userId - User ID
-   * @param {string} reportType - Type of report (daily, weekly, monthly)
-   * @param {Object} reportData - Report data
-   * @returns {Object} Result
+   * Validate email address format
    */
-  async sendReportEmail(userId, reportType, reportData) {
-    try {
-      // TODO: Implement in next task
-      logger.info('sendReportEmail called', { userId, reportType });
-      
-      return {
-        success: false,
-        error: 'Not implemented yet',
-      };
-    } catch (error) {
-      logger.error('Failed to send report email', { error: error.message, userId });
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   /**
-   * Send critical alert email
-   * @param {number} userId - User ID
-   * @param {string} alertType - Type of alert
-   * @param {Object} alertData - Alert data
-   * @returns {Object} Result
+   * Strip HTML tags from text
    */
-  async sendCriticalAlert(userId, alertType, alertData) {
-    try {
-      // TODO: Implement in next task
-      logger.info('sendCriticalAlert called', { userId, alertType });
-      
-      return {
-        success: false,
-        error: 'Not implemented yet',
-      };
-    } catch (error) {
-      logger.error('Failed to send critical alert', { error: error.message, userId });
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  }
-
-  /**
-   * Verify an email address
-   * @param {string} email - Email address to verify
-   * @returns {Object} Result
-   */
-  async verifyEmailAddress(email) {
-    try {
-      // Basic email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return {
-          success: false,
-          error: 'Invalid email format',
-        };
-      }
-
-      // TODO: Implement verification token system
-      logger.info('Email verification requested', { email });
-      
-      return {
-        success: true,
-        verified: false,
-        message: 'Verification email sent',
-      };
-    } catch (error) {
-      logger.error('Failed to verify email', { error: error.message, email });
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+  stripHtml(html) {
+    return html.replace(/<[^>]*>/g, '').trim();
   }
 
   /**
    * Get email delivery statistics
-   * @returns {Object} Statistics
    */
-  getDeliveryStats() {
+  getStats() {
     return {
-      enabled: this.config.enabled,
-      initialized: this.initialized,
-      config: {
-        fromEmail: this.config.fromEmail,
-        fromName: this.config.fromName,
-        batchSize: this.config.batchSize,
-        rateLimitPerMinute: this.config.rateLimitPerMinute,
-      },
+      ...this.stats,
+      successRate: this.stats.sent > 0
+        ? ((this.stats.sent / (this.stats.sent + this.stats.failed)) * 100).toFixed(2)
+        : 0,
     };
   }
 
   /**
-   * Health check for email service
-   * @returns {Object} Health status
+   * Health check
    */
   async healthCheck() {
     return {
-      status: this.config.enabled && this.initialized ? 'healthy' : 'disabled',
+      status: this.initialized ? 'healthy' : 'unhealthy',
       enabled: this.config.enabled,
-      initialized: this.initialized,
-      apiKeyConfigured: !!this.config.apiKey && this.config.apiKey !== 're_test_key_placeholder',
+      stats: this.getStats(),
     };
   }
 
   /**
-   * Strip HTML tags from text (simple implementation)
-   * @param {string} html - HTML content
-   * @returns {string} Plain text
+   * Reset statistics
    */
-  stripHtml(html) {
-    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  resetStats() {
+    this.stats = {
+      sent: 0,
+      failed: 0,
+      pending: 0,
+    };
   }
 }
 

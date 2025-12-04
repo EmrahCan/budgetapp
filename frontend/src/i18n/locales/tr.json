@@ -418,6 +418,34 @@
       "stat3": "Erişim",
       "stat4": "Güvenli"
     }
+  },
+  "emailPreferences": {
+    "title": "E-posta Bildirimleri",
+    "description": "E-posta bildirim tercihlerinizi yönetin",
+    "emailEnabled": "E-posta Bildirimlerini Etkinleştir",
+    "emailEnabledHelp": "Tüm e-posta bildirimlerini kapat",
+    "dailyDigest": "Günlük Özet",
+    "dailyDigestEnabled": "Günlük Özet E-postası",
+    "dailyDigestHelp": "Bildirimlerinizin günlük özetini alın",
+    "digestTime": "Tercih Edilen Saat",
+    "digestTimeHelp": "Günlük özetinizi hangi saatte gönderelim?",
+    "reports": "Finansal Raporlar",
+    "reportEmailsEnabled": "Rapor E-postaları",
+    "reportEmailsHelp": "E-posta ile finansal raporlar alın",
+    "reportFrequency": "Rapor Sıklığı",
+    "reportFrequencyHelp": "Raporları ne sıklıkla gönderelim?",
+    "daily": "Günlük",
+    "weekly": "Haftalık",
+    "monthly": "Aylık",
+    "alerts": "Kritik Uyarılar",
+    "criticalAlertsEnabled": "Kritik Uyarılar",
+    "criticalAlertsHelp": "Bütçe limitleri ve gecikmiş ödemeler için anında uyarı alın",
+    "language": "E-posta Dili",
+    "emailLanguage": "Tercih Edilen Dil",
+    "emailLanguageHelp": "E-posta bildirimleri için dil",
+    "fetchError": "Tercihler yüklenemedi",
+    "saveSuccess": "Tercihler başarıyla kaydedildi",
+    "saveError": "Tercihler kaydedilemedi"
   }
 }
 
