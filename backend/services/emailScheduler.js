@@ -114,13 +114,16 @@ class EmailScheduler {
 
       // Send email
       console.log(`📤 Sending daily digest to ${digestContent.to}...`);
-      await emailService.sendEmail({
-        to: digestContent.to,
-        subject: digestContent.subject,
-        html: digestContent.html,
-        emailType: 'daily_digest',
-        userId: userId
-      });
+      await emailService.sendEmail(
+        digestContent.to,
+        digestContent.subject,
+        digestContent.html,
+        null, // text version
+        {
+          emailType: 'daily_digest',
+          userId: userId
+        }
+      );
 
       console.log(`✅ Daily digest sent successfully to user ${userId}`);
 
