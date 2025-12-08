@@ -114,6 +114,9 @@ class EmailScheduler {
 
       // Send email
       console.log(`📤 Sending daily digest to ${digestContent.to}...`);
+      console.log(`📧 Email service initialized:`, emailService.initialized);
+      console.log(`📧 Email service enabled:`, emailService.config?.enabled);
+      
       const result = await emailService.sendEmail(
         digestContent.to,
         digestContent.subject,
@@ -125,10 +128,11 @@ class EmailScheduler {
         }
       );
 
-      console.log(`✅ Daily digest sent successfully to user ${userId}`, result);
+      console.log(`✅ Daily digest sent successfully to user ${userId}. Result:`, JSON.stringify(result));
 
     } catch (error) {
       console.error(`❌ Error sending daily digest to user ${userId}:`, error);
+      console.error(`❌ Error stack:`, error.stack);
       // Log the error but continue with other users
     }
   }
