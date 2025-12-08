@@ -111,6 +111,9 @@ class EmailScheduler {
       // Generate digest content
       console.log(`📝 Generating daily digest for user ${userId}...`);
       const digestContent = await DailyDigestGenerator.generateDailyDigest(userId);
+      console.log(`📧 Digest content generated:`, digestContent ? 'YES' : 'NO');
+      console.log(`📧 Digest to:`, digestContent?.to);
+      console.log(`📧 Digest subject:`, digestContent?.subject);
 
       // Send email
       console.log(`📤 Sending daily digest to ${digestContent.to}...`);
