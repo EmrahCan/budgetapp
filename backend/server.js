@@ -14,6 +14,7 @@ const notificationGeneratorService = require('./services/notificationGeneratorSe
 
 // Import email service
 const emailService = require('./services/emailService');
+const emailScheduler = require('./services/emailScheduler');
 
 // Import health monitoring
 const {
@@ -318,11 +319,13 @@ async function initializeServices() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  emailScheduler.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
+  emailScheduler.stop();
   process.exit(0);
 });
 
@@ -330,6 +333,9 @@ process.on('SIGINT', async () => {
 async function startServer() {
   try {
     await initializeServices();
+    
+    // Start email scheduler
+    emailScheduler.start();
     
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
