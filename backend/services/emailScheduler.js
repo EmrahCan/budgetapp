@@ -97,7 +97,7 @@ class EmailScheduler {
         SELECT id FROM email_delivery_log
         WHERE user_id = $1
           AND email_type = 'daily_digest'
-          AND DATE(created_at) = $2
+          AND created_at::date = $2::date
         LIMIT 1
       `;
 
