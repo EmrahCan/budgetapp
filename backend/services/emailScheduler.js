@@ -131,8 +131,9 @@ class EmailScheduler {
       console.log(`✅ Daily digest sent successfully to user ${userId}. Result:`, JSON.stringify(result));
 
     } catch (error) {
-      console.error(`❌ Error sending daily digest to user ${userId}:`, error);
-      console.error(`❌ Error stack:`, error.stack);
+      console.log(`❌ Error sending daily digest to user ${userId}:`, error.message);
+      console.log(`❌ Error stack:`, error.stack);
+      console.log(`❌ Full error:`, JSON.stringify(error, Object.getOwnPropertyNames(error)));
       // Log the error but continue with other users
     }
   }
