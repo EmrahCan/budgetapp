@@ -637,6 +637,16 @@ const FixedPaymentsPage = () => {
       const apiMonth = month !== undefined ? month + 1 : selectedMonth + 1;
       const apiYear = year !== undefined ? year : selectedYear;
       
+      // Optimistic update - immediately update UI
+      setPaymentStatuses(prev => ({
+        ...prev,
+        [paymentId]: {
+          ...prev[paymentId],
+          isPaid: isPaid,
+          paidDate: isPaid ? new Date().toISOString().split('T')[0] : null
+        }
+      }));
+      
       if (isPaid) {
         // Mark as paid
         const payment = payments.find(p => p.id === paymentId);
@@ -656,9 +666,17 @@ const FixedPaymentsPage = () => {
         showSuccess('Ödeme yapılmadı olarak işaretlendi');
       }
       
-      // Reload payment history
+      // Reload payment history to sync with server
       await loadPaymentHistory();
     } catch (error) {
+      // Revert optimistic update on error
+      setPaymentStatuses(prev => ({
+        ...prev,
+        [paymentId]: {
+          ...prev[paymentId],
+          isPaid: !isPaid
+        }
+      }));
       handleDataError(error, 'Ödeme durumu güncelleme');
       throw error; // Re-throw to let checkbox component handle it
     }
