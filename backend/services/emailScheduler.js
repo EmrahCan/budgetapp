@@ -50,13 +50,14 @@ class EmailScheduler {
       const today = now.toISOString().split('T')[0];
 
       // Find users who should receive digest at this time
+      // Note: daily_digest_time is stored as TIME type, so we need to cast for comparison
       const query = `
         SELECT u.id, u.email, u.first_name, ep.daily_digest_time
         FROM users u
         INNER JOIN user_email_preferences ep ON u.id = ep.user_id
         WHERE ep.email_enabled = true
           AND ep.daily_digest_enabled = true
-          AND ep.daily_digest_time = $1
+          AND TO_CHAR(ep.daily_digest_time, 'HH24:MI') = $1
       `;
 
       const result = await DatabaseUtils.query(query, [currentTime]);
