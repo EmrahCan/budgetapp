@@ -429,6 +429,8 @@
     "dailyDigestHelp": "Günlük harcama özetinizi e-posta ile alın",
     "digestTime": "Gönderim Saati",
     "digestTimeHelp": "Günlük özetin gönderileceği saat",
+    "timezone": "Saat Dilimi",
+    "timezoneHelp": "E-postaların zamanlanması için yerel saat diliminiz",
     "reports": "Raporlar",
     "reportEmailsEnabled": "Rapor e-postaları gönder",
     "reportEmailsHelp": "Periyodik harcama raporlarını e-posta ile alın",

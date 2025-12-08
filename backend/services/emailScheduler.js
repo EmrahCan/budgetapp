@@ -46,36 +46,50 @@ class EmailScheduler {
   async checkAndSendDailyDigests() {
     try {
       const now = new Date();
-      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const currentTimeUTC = `${now.getUTCHours().toString().padStart(2, '0')}:${now.getUTCMinutes().toString().padStart(2, '0')}`;
       const today = now.toISOString().split('T')[0];
 
-      // Debug log every minute for testing
-      console.log(`⏰ Email scheduler check at ${currentTime}`);
+      // Debug log every 5 minutes
+      if (now.getUTCMinutes() % 5 === 0) {
+        console.log(`⏰ Email scheduler check at ${currentTimeUTC} UTC`);
+      }
 
       // Find users who should receive digest at this time
-      // Note: daily_digest_time is stored as TIME type, so we need to cast for comparison
+      // We convert user's local time to UTC for comparison with server time
+      // Using PostgreSQL's timezone conversion: (CURRENT_DATE + time) AT TIME ZONE timezone AT TIME ZONE 'UTC'
       const query = `
-        SELECT u.id, u.email, u.first_name, ep.daily_digest_time
+        SELECT 
+          u.id, 
+          u.email, 
+          u.first_name, 
+          ep.daily_digest_time,
+          ep.timezone,
+          TO_CHAR(
+            (CURRENT_DATE + ep.daily_digest_time) AT TIME ZONE COALESCE(ep.timezone, 'Europe/Istanbul') AT TIME ZONE 'UTC',
+            'HH24:MI'
+          ) as utc_time
         FROM users u
         INNER JOIN user_email_preferences ep ON u.id = ep.user_id
         WHERE ep.email_enabled = true
           AND ep.daily_digest_enabled = true
-          AND TO_CHAR(ep.daily_digest_time, 'HH24:MI') = $1
+          AND TO_CHAR(
+            (CURRENT_DATE + ep.daily_digest_time) AT TIME ZONE COALESCE(ep.timezone, 'Europe/Istanbul') AT TIME ZONE 'UTC',
+            'HH24:MI'
+          ) = $1
       `;
 
-      console.log(`🔍 Checking for users with digest time: ${currentTime}`);
-      const result = await DatabaseUtils.query(query, [currentTime]);
-      console.log(`📊 Query returned ${result.rows.length} user(s)`);
+      const result = await DatabaseUtils.query(query, [currentTimeUTC]);
 
       if (result.rows.length === 0) {
         // No users to send at this time
         return;
       }
 
-      console.log(`📧 Found ${result.rows.length} user(s) to send daily digest at ${currentTime}`);
+      console.log(`📧 Found ${result.rows.length} user(s) to send daily digest at ${currentTimeUTC} UTC`);
 
       // Process each user
       for (const user of result.rows) {
+        console.log(`📧 Sending to user ${user.id} (${user.email}) - Local time: ${user.daily_digest_time}, Timezone: ${user.timezone}`);
         await this.sendDailyDigestToUser(user.id, today);
       }
 

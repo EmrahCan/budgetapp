@@ -67,6 +67,7 @@ class EmailPreferences {
         report_frequency,
         critical_alerts_enabled,
         language,
+        timezone,
       } = preferences;
 
       const result = await pool.query(
@@ -78,6 +79,7 @@ class EmailPreferences {
           report_frequency = COALESCE($6, report_frequency),
           critical_alerts_enabled = COALESCE($7, critical_alerts_enabled),
           language = COALESCE($8, language),
+          timezone = COALESCE($9, timezone),
           updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $1
         RETURNING *`,
@@ -90,6 +92,7 @@ class EmailPreferences {
           report_frequency,
           critical_alerts_enabled,
           language,
+          timezone,
         ]
       );
 

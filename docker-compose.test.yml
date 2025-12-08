@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: budget_database_test
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-budget_app}
+      POSTGRES_USER: ${DB_USER:-budget_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - budget_network_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-budget_admin} -d ${DB_NAME:-budget_app}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backend API (Node.js/Express)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: budget_backend_test
+    restart: always
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5001
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-budget_app}
+      DB_USER: ${DB_USER:-budget_admin}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-pro}
+      AI_CATEGORIZATION_ENABLED: ${AI_CATEGORIZATION_ENABLED:-true}
+      AI_INSIGHTS_ENABLED: ${AI_INSIGHTS_ENABLED:-true}
+      AI_RECOMMENDATIONS_ENABLED: ${AI_RECOMMENDATIONS_ENABLED:-true}
+      AI_NL_QUERIES_ENABLED: ${AI_NL_QUERIES_ENABLED:-true}
+      AI_USE_MOCK_DATA: ${AI_USE_MOCK_DATA:-false}
+      AI_RATE_LIMIT: ${AI_RATE_LIMIT:-60}
+      AI_CACHE_ENABLED: ${AI_CACHE_ENABLED:-true}
+      AI_CACHE_TTL: ${AI_CACHE_TTL:-3600}
+      AI_ENABLE_LOGGING: ${AI_ENABLE_LOGGING:-true}
+      AI_CATEGORIZATION_MIN_CONFIDENCE: ${AI_CATEGORIZATION_MIN_CONFIDENCE:-70}
+      AI_INSIGHT_MIN_CONFIDENCE: ${AI_INSIGHT_MIN_CONFIDENCE:-60}
+      AI_RECOMMENDATION_MIN_CONFIDENCE: ${AI_RECOMMENDATION_MIN_CONFIDENCE:-75}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    volumes:
+      - ./backend/logs:/app/logs
+      - ./backend/uploads:/app/uploads
+    networks:
+      - budget_network_test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend (React) with nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.nginx
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+    container_name: budget_frontend_test
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - budget_network_test
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: budget_nginx_test
+    restart: always
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - budget_network_test
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data_test:
+    driver: local
+
+networks:
+  budget_network_test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

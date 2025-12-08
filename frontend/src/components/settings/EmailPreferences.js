@@ -18,6 +18,7 @@ const EmailPreferences = () => {
     report_frequency: 'weekly',
     critical_alerts_enabled: true,
     language: 'tr',
+    timezone: 'Europe/Istanbul',
   });
 
   useEffect(() => {
@@ -39,6 +40,7 @@ const EmailPreferences = () => {
           report_frequency: prefs.report_frequency,
           critical_alerts_enabled: prefs.critical_alerts_enabled,
           language: prefs.language,
+          timezone: prefs.timezone || 'Europe/Istanbul',
         });
       }
     } catch (error) {
@@ -186,23 +188,51 @@ const EmailPreferences = () => {
           </div>
 
           {preferences.daily_digest_enabled && (
-            <div className="preference-item">
-              <div className="preference-info">
-                <label className="preference-label">
-                  {t('emailPreferences.digestTime') || 'Preferred Time'}
-                </label>
-                <p className="preference-help">
-                  {t('emailPreferences.digestTimeHelp') || 'What time should we send your daily digest?'}
-                </p>
+            <>
+              <div className="preference-item">
+                <div className="preference-info">
+                  <label className="preference-label">
+                    {t('emailPreferences.digestTime') || 'Preferred Time'}
+                  </label>
+                  <p className="preference-help">
+                    {t('emailPreferences.digestTimeHelp') || 'What time should we send your daily digest?'}
+                  </p>
+                </div>
+                <input
+                  type="time"
+                  className="time-input"
+                  value={preferences.daily_digest_time}
+                  onChange={(e) => handleChange('daily_digest_time', e.target.value)}
+                  disabled={!preferences.email_enabled}
+                />
               </div>
-              <input
-                type="time"
-                className="time-input"
-                value={preferences.daily_digest_time}
-                onChange={(e) => handleChange('daily_digest_time', e.target.value)}
-                disabled={!preferences.email_enabled}
-              />
-            </div>
+              
+              <div className="preference-item">
+                <div className="preference-info">
+                  <label className="preference-label">
+                    {t('emailPreferences.timezone') || 'Timezone'}
+                  </label>
+                  <p className="preference-help">
+                    {t('emailPreferences.timezoneHelp') || 'Your local timezone for scheduling emails'}
+                  </p>
+                </div>
+                <select
+                  className="timezone-select"
+                  value={preferences.timezone}
+                  onChange={(e) => handleChange('timezone', e.target.value)}
+                  disabled={!preferences.email_enabled}
+                >
+                  <option value="Europe/Istanbul">Istanbul (GMT+3)</option>
+                  <option value="Europe/London">London (GMT+0)</option>
+                  <option value="Europe/Paris">Paris (GMT+1)</option>
+                  <option value="Europe/Berlin">Berlin (GMT+1)</option>
+                  <option value="America/New_York">New York (GMT-5)</option>
+                  <option value="America/Los_Angeles">Los Angeles (GMT-8)</option>
+                  <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+                  <option value="Asia/Dubai">Dubai (GMT+4)</option>
+                </select>
+              </div>
+            </>
           )}
         </div>
 

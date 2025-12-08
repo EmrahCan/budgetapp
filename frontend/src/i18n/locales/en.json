@@ -431,6 +431,8 @@
     "dailyDigestHelp": "Receive daily spending summary via email",
     "digestTime": "Send Time",
     "digestTimeHelp": "Time when daily digest will be sent",
+    "timezone": "Timezone",
+    "timezoneHelp": "Your local timezone for scheduling emails",
     "reports": "Reports",
     "reportEmailsEnabled": "Send report emails",
     "reportEmailsHelp": "Receive periodic spending reports via email",
