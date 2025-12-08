@@ -49,10 +49,8 @@ class EmailScheduler {
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       const today = now.toISOString().split('T')[0];
 
-      // Debug log every 5 minutes
-      if (now.getMinutes() % 5 === 0) {
-        console.log(`⏰ Email scheduler check at ${currentTime}`);
-      }
+      // Debug log every minute for testing
+      console.log(`⏰ Email scheduler check at ${currentTime}`);
 
       // Find users who should receive digest at this time
       // Note: daily_digest_time is stored as TIME type, so we need to cast for comparison
@@ -65,7 +63,9 @@ class EmailScheduler {
           AND TO_CHAR(ep.daily_digest_time, 'HH24:MI') = $1
       `;
 
+      console.log(`🔍 Checking for users with digest time: ${currentTime}`);
       const result = await DatabaseUtils.query(query, [currentTime]);
+      console.log(`📊 Query returned ${result.rows.length} user(s)`);
 
       if (result.rows.length === 0) {
         // No users to send at this time
@@ -80,7 +80,8 @@ class EmailScheduler {
       }
 
     } catch (error) {
-      console.error('Error in checkAndSendDailyDigests:', error);
+      console.error('❌ Error in checkAndSendDailyDigests:', error);
+      console.error('❌ Error stack:', error.stack);
       // Don't throw - we don't want to crash the server
     }
   }
