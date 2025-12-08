@@ -114,7 +114,7 @@ class EmailScheduler {
 
       // Send email
       console.log(`📤 Sending daily digest to ${digestContent.to}...`);
-      await emailService.sendEmail(
+      const result = await emailService.sendEmail(
         digestContent.to,
         digestContent.subject,
         digestContent.html,
@@ -125,7 +125,7 @@ class EmailScheduler {
         }
       );
 
-      console.log(`✅ Daily digest sent successfully to user ${userId}`);
+      console.log(`✅ Daily digest sent successfully to user ${userId}`, result);
 
     } catch (error) {
       console.error(`❌ Error sending daily digest to user ${userId}:`, error);
