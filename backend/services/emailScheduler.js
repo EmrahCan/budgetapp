@@ -49,6 +49,11 @@ class EmailScheduler {
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       const today = now.toISOString().split('T')[0];
 
+      // Debug log every 5 minutes
+      if (now.getMinutes() % 5 === 0) {
+        console.log(`⏰ Email scheduler check at ${currentTime}`);
+      }
+
       // Find users who should receive digest at this time
       // Note: daily_digest_time is stored as TIME type, so we need to cast for comparison
       const query = `
