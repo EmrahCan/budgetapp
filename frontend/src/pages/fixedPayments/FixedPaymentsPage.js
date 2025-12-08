@@ -1319,12 +1319,21 @@ const FixedPaymentsPage = () => {
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Chip
-                                size="small"
-                                label={isMobile ? payment.label.substring(0, 3) : payment.label}
-                                color={payment.color}
-                                icon={isMobile ? null : payment.icon}
-                              />
+                              {paymentStatus.isPaid ? (
+                                <Chip
+                                  size="small"
+                                  label="Ödendi"
+                                  color="success"
+                                  icon={<CheckCircle />}
+                                />
+                              ) : (
+                                <Chip
+                                  size="small"
+                                  label={isMobile ? payment.label.substring(0, 3) : payment.label}
+                                  color={payment.color}
+                                  icon={isMobile ? null : payment.icon}
+                                />
+                              )}
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', gap: isMobile ? 0.5 : 1 }}>
