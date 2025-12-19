@@ -19,7 +19,7 @@ Provider:       Azure
 Region:         West Europe
 OS:             Ubuntu 22.04 LTS
 Size:           Standard B2s (2 vCPU, 4 GB RAM)
-IP Address:     108.141.152.224
+IP Address:     20.224.194.131
 Domain:         test.budgetapp.site (planlanan)
 Username:       obiwan
 Password:       Eben2010++**
@@ -58,7 +58,7 @@ DNS Records:
 ### 1. SSH Bağlantısı
 ```bash
 # Test sunucusuna bağlan
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 
 # Production sunucusuna bağlan
 ssh obiwan@4.210.196.73
@@ -276,11 +276,11 @@ AI_INSIGHT_MIN_CONFIDENCE=60
 AI_RECOMMENDATION_MIN_CONFIDENCE=75
 
 # Frontend URL
-FRONTEND_URL=http://108.141.152.224
-ALLOWED_ORIGINS=http://108.141.152.224
+FRONTEND_URL=http://20.224.194.131
+ALLOWED_ORIGINS=http://20.224.194.131
 
 # React App
-REACT_APP_API_URL=http://108.141.152.224/api
+REACT_APP_API_URL=http://20.224.194.131/api
 ```
 
 #### Production Environment
@@ -473,7 +473,7 @@ jobs:
 
 #### Test Secrets
 ```
-TEST_SSH_HOST = 108.141.152.224
+TEST_SSH_HOST = 20.224.194.131
 TEST_SSH_USER = obiwan
 TEST_SSH_PASSWORD = Eben2010++**
 ```

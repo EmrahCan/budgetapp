@@ -5,7 +5,7 @@ This guide explains how to deploy the Budget App to Test and Production VMs.
 ## VM Information
 
 ### Test VM (Vm01)
-- **IP:** 108.141.152.224
+- **IP:** 20.224.194.131
 - **Username:** obiwan
 - **Environment:** test
 - **Purpose:** Testing and staging
@@ -31,7 +31,7 @@ Both VMs should have:
 
 **Test VM:**
 ```bash
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 ```
 
 **Production VM:**
@@ -131,7 +131,7 @@ curl http://localhost/
 
 Test VM:
 ```bash
-curl http://108.141.152.224/health
+curl http://20.224.194.131/health
 ```
 
 Production VM:

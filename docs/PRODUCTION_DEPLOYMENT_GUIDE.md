@@ -334,7 +334,7 @@ ls -lh backups/
 | Özellik | Test | Production |
 |---------|------|------------|
 | Domain | test.budgetapp.site | budgetapp.site |
-| VM IP | 108.141.152.224 | 4.210.196.73 |
+| VM IP | 20.224.194.131 | 4.210.196.73 |
 | Branch | develop | main |
 | Database | budget_app_test | budget_app_prod |
 | Backup | Opsiyonel | Zorunlu |

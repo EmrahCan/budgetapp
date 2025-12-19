@@ -178,7 +178,7 @@ backend/
 ### Base URL
 ```
 Production:  https://budgetapp.site/api
-Test:        http://108.141.152.224/api
+Test:        http://20.224.194.131/api
 Local:       http://localhost:5001/api
 ```
 

@@ -27,6 +27,7 @@ import {
   Payment,
   Repeat,
   CalendarToday,
+  CameraAlt,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -76,6 +77,11 @@ const getMenuItems = (userRole, t) => {
       text: t('navigation.reports'),
       icon: <Assessment />,
       path: '/reports',
+    },
+    {
+      text: 'Fiş Okuma (OCR)',
+      icon: <CameraAlt />,
+      path: '/ocr',
     },
   ];
 

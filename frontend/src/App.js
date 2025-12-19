@@ -21,7 +21,9 @@ import TransactionsPage from './pages/transactions/TransactionsPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import FixedPaymentsPage from './pages/fixedPayments/FixedPaymentsPage';
+import EmailPreferences from './components/settings/EmailPreferences';
 import InstallmentPaymentsPage from './pages/installmentPayments/InstallmentPaymentsPage';
+import OCRPage from './pages/ocr/OCRPage';
 import PaymentCalendarPage from './pages/calendar/PaymentCalendarPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
@@ -76,6 +78,8 @@ function App() {
                   <Route path="payment-calendar" element={<PaymentCalendarPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+                  <Route path="email-preferences" element={<EmailPreferences />} />
+                  <Route path="ocr" element={<OCRPage />} />
                   
                   {/* Admin Routes */}
                   <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

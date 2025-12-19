@@ -4,10 +4,10 @@ This guide walks you through deploying Budget App to the test VM with all fixes 
 
 ## Test VM Information
 
-- **IP:** 108.141.152.224
+- **IP:** 20.224.194.131
 - **Username:** obiwan
 - **Domain:** test.budgetapp.site
-- **SSH:** `ssh obiwan@108.141.152.224`
+- **SSH:** `ssh obiwan@20.224.194.131`
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ This guide walks you through deploying Budget App to the test VM with all fixes 
 ## Step 1: Connect to Test VM
 
 ```bash
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 ```
 
 ## Step 2: Clone Repository
@@ -209,7 +209,7 @@ docker logs budget_backend --tail=10
 4. Add A record:
    - **Type:** A
    - **Name:** test
-   - **IPv4 address:** 108.141.152.224
+   - **IPv4 address:** 20.224.194.131
    - **Proxy status:** ✅ Proxied (orange cloud)
    - **TTL:** Auto
 5. Click **Save**
@@ -315,7 +315,7 @@ dig test.budgetapp.site
 ```
 
 **Check Cloudflare:**
-- Verify A record points to 108.141.152.224
+- Verify A record points to 20.224.194.131
 - Verify Proxy is enabled (orange cloud)
 - Wait 5 minutes for DNS propagation
 

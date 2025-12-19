@@ -11,7 +11,7 @@
 ### Step 1: Connect to Test VM
 
 ```bash
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 # Password: Eben2010++**
 ```
 
@@ -63,7 +63,7 @@ chmod +x scripts/vm-setup.sh
 exit
 
 # Log back in
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 ```
 
 ### Step 5: Verify Installation on Test VM
@@ -135,7 +135,7 @@ git clone https://YOUR_TOKEN@github.com/YOUR_USERNAME/YOUR_REPO_NAME.git .
 # On your local machine:
 cd /path/to/budget
 tar -czf budget-app.tar.gz .
-scp budget-app.tar.gz obiwan@108.141.152.224:~/
+scp budget-app.tar.gz obiwan@20.224.194.131:~/
 # Then on VM:
 cd ~/budget-app
 tar -xzf ~/budget-app.tar.gz
@@ -145,7 +145,7 @@ tar -xzf ~/budget-app.tar.gz
 ```bash
 # Log out and back in (Docker group change needs new session)
 exit
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 
 # Test Docker
 docker ps

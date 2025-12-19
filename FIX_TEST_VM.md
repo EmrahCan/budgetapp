@@ -10,7 +10,7 @@ Frontend container'ı `serve` komutu ile çalışıyor ve directory listing gös
 
 ### 1. Test VM'ine Bağlan
 ```bash
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 ```
 
 ### 2. Budget Dizinine Git

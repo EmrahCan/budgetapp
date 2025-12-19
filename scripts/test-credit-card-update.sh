@@ -13,7 +13,7 @@ echo ""
 # Check if VM argument provided
 if [ -z "$1" ]; then
     echo "Usage: $0 [test|prod]"
-    echo "  test - Test on Test VM (108.141.152.224)"
+    echo "  test - Test on Test VM (20.224.194.131)"
     echo "  prod - Test on Production VM (4.210.196.73)"
     exit 1
 fi
@@ -22,7 +22,7 @@ ENV=$1
 
 # Set VM details based on environment
 if [ "$ENV" == "test" ]; then
-    VM_IP="108.141.152.224"
+    VM_IP="20.224.194.131"
     VM_NAME="Test VM (Vm01)"
     API_URL="http://localhost:5001"
 elif [ "$ENV" == "prod" ]; then

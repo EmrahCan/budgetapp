@@ -53,6 +53,7 @@ import { tr } from 'date-fns/locale';
 import { useNotification } from '../../contexts/NotificationContext';
 import { transactionsAPI, accountsAPI, creditCardsAPI, formatCurrency, formatDate, handleApiError } from '../../services/api';
 import { debounce } from 'lodash';
+import ReceiptScanner from '../../components/ocr/ReceiptScanner';
 
 const TRANSACTION_TYPES = [
   { value: 'income', label: 'Gelir', icon: <TrendingUp />, color: 'success' },
@@ -90,6 +91,9 @@ const TransactionsPage = () => {
   // AI Categorization
   const [aiSuggestion, setAiSuggestion] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Receipt Scanner
+  const [receiptScannerOpen, setReceiptScannerOpen] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -151,6 +155,23 @@ const TransactionsPage = () => {
   
   const handleRejectAISuggestion = () => {
     setAiSuggestion(null);
+  };
+
+  // Handle OCR extracted data
+  const handleOCRDataExtracted = (ocrData) => {
+    setFormData(prev => ({
+      ...prev,
+      amount: ocrData.amount || prev.amount,
+      description: ocrData.description || prev.description,
+      transactionDate: ocrData.date ? new Date(ocrData.date.split('.').reverse().join('-')) : prev.transactionDate
+    }));
+    
+    // Trigger AI suggestion if we have description and amount
+    if (ocrData.description && ocrData.amount) {
+      getAISuggestion(ocrData.description, ocrData.amount);
+    }
+    
+    showSuccess('Fiş bilgileri forma aktarıldı!');
   };
 
   useEffect(() => {
@@ -595,6 +616,19 @@ const TransactionsPage = () => {
                   helperText={formErrors.amount}
                   InputProps={{
                     startAdornment: <Typography sx={{ mr: 1 }}>₺</Typography>,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Receipt />}
+                          onClick={() => setReceiptScannerOpen(true)}
+                          sx={{ minWidth: 'auto', px: 1 }}
+                        >
+                          📷 Fiş Tara
+                        </Button>
+                      </InputAdornment>
+                    ),
                   }}
                   sx={{ mb: 3 }}
                 />
@@ -728,6 +762,13 @@ const TransactionsPage = () => {
               </Button>
             </DialogActions>
           </Dialog>
+
+          {/* Receipt Scanner */}
+          <ReceiptScanner
+            open={receiptScannerOpen}
+            onClose={() => setReceiptScannerOpen(false)}
+            onDataExtracted={handleOCRDataExtracted}
+          />
         </Box>
       </Container>
     </LocalizationProvider>

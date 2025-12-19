@@ -13,12 +13,7 @@ const EmailPreferences = () => {
   const [preferences, setPreferences] = useState({
     email_enabled: true,
     daily_digest_enabled: true,
-    daily_digest_time: '08:00',
-    report_emails_enabled: true,
-    report_frequency: 'weekly',
-    critical_alerts_enabled: true,
-    language: 'tr',
-    timezone: 'Europe/Istanbul',
+    daily_digest_time: '09:00',
   });
 
   useEffect(() => {
@@ -35,12 +30,7 @@ const EmailPreferences = () => {
         setPreferences({
           email_enabled: prefs.email_enabled,
           daily_digest_enabled: prefs.daily_digest_enabled,
-          daily_digest_time: prefs.daily_digest_time?.substring(0, 5) || '08:00',
-          report_emails_enabled: prefs.report_emails_enabled,
-          report_frequency: prefs.report_frequency,
-          critical_alerts_enabled: prefs.critical_alerts_enabled,
-          language: prefs.language,
-          timezone: prefs.timezone || 'Europe/Istanbul',
+          daily_digest_time: prefs.daily_digest_time?.substring(0, 5) || '09:00',
         });
       }
     } catch (error) {
@@ -188,157 +178,27 @@ const EmailPreferences = () => {
           </div>
 
           {preferences.daily_digest_enabled && (
-            <>
-              <div className="preference-item">
-                <div className="preference-info">
-                  <label className="preference-label">
-                    {t('emailPreferences.digestTime') || 'Preferred Time'}
-                  </label>
-                  <p className="preference-help">
-                    {t('emailPreferences.digestTimeHelp') || 'What time should we send your daily digest?'}
-                  </p>
-                </div>
-                <input
-                  type="time"
-                  className="time-input"
-                  value={preferences.daily_digest_time}
-                  onChange={(e) => handleChange('daily_digest_time', e.target.value)}
-                  disabled={!preferences.email_enabled}
-                />
-              </div>
-              
-              <div className="preference-item">
-                <div className="preference-info">
-                  <label className="preference-label">
-                    {t('emailPreferences.timezone') || 'Timezone'}
-                  </label>
-                  <p className="preference-help">
-                    {t('emailPreferences.timezoneHelp') || 'Your local timezone for scheduling emails'}
-                  </p>
-                </div>
-                <select
-                  className="timezone-select"
-                  value={preferences.timezone}
-                  onChange={(e) => handleChange('timezone', e.target.value)}
-                  disabled={!preferences.email_enabled}
-                >
-                  <option value="Europe/Istanbul">Istanbul (GMT+3)</option>
-                  <option value="Europe/London">London (GMT+0)</option>
-                  <option value="Europe/Paris">Paris (GMT+1)</option>
-                  <option value="Europe/Berlin">Berlin (GMT+1)</option>
-                  <option value="America/New_York">New York (GMT-5)</option>
-                  <option value="America/Los_Angeles">Los Angeles (GMT-8)</option>
-                  <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
-                  <option value="Asia/Dubai">Dubai (GMT+4)</option>
-                </select>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Report Emails */}
-        <div className="preference-section">
-          <h3 className="section-title">
-            {t('emailPreferences.reports') || 'Financial Reports'}
-          </h3>
-          
-          <div className="preference-item">
-            <div className="preference-info">
-              <label className="preference-label">
-                {t('emailPreferences.reportEmailsEnabled') || 'Report Emails'}
-              </label>
-              <p className="preference-help">
-                {t('emailPreferences.reportEmailsHelp') || 'Receive financial reports via email'}
-              </p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={preferences.report_emails_enabled}
-                onChange={(e) => handleChange('report_emails_enabled', e.target.checked)}
-                disabled={!preferences.email_enabled}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-
-          {preferences.report_emails_enabled && (
             <div className="preference-item">
               <div className="preference-info">
                 <label className="preference-label">
-                  {t('emailPreferences.reportFrequency') || 'Report Frequency'}
+                  {t('emailPreferences.digestTime') || 'Preferred Time'}
                 </label>
                 <p className="preference-help">
-                  {t('emailPreferences.reportFrequencyHelp') || 'How often should we send reports?'}
+                  {t('emailPreferences.digestTimeHelp') || 'What time should we send your daily digest?'}
                 </p>
               </div>
-              <select
-                className="frequency-select"
-                value={preferences.report_frequency}
-                onChange={(e) => handleChange('report_frequency', e.target.value)}
+              <input
+                type="time"
+                className="time-input"
+                value={preferences.daily_digest_time}
+                onChange={(e) => handleChange('daily_digest_time', e.target.value)}
                 disabled={!preferences.email_enabled}
-              >
-                <option value="daily">{t('emailPreferences.daily') || 'Daily'}</option>
-                <option value="weekly">{t('emailPreferences.weekly') || 'Weekly'}</option>
-                <option value="monthly">{t('emailPreferences.monthly') || 'Monthly'}</option>
-              </select>
+              />
             </div>
           )}
         </div>
 
-        {/* Critical Alerts */}
-        <div className="preference-section">
-          <h3 className="section-title">
-            {t('emailPreferences.alerts') || 'Critical Alerts'}
-          </h3>
-          
-          <div className="preference-item">
-            <div className="preference-info">
-              <label className="preference-label">
-                {t('emailPreferences.criticalAlertsEnabled') || 'Critical Alerts'}
-              </label>
-              <p className="preference-help">
-                {t('emailPreferences.criticalAlertsHelp') || 'Receive immediate alerts for budget limits and overdue payments'}
-              </p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={preferences.critical_alerts_enabled}
-                onChange={(e) => handleChange('critical_alerts_enabled', e.target.checked)}
-                disabled={!preferences.email_enabled}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
 
-        {/* Language */}
-        <div className="preference-section">
-          <h3 className="section-title">
-            {t('emailPreferences.language') || 'Email Language'}
-          </h3>
-          
-          <div className="preference-item">
-            <div className="preference-info">
-              <label className="preference-label">
-                {t('emailPreferences.emailLanguage') || 'Preferred Language'}
-              </label>
-              <p className="preference-help">
-                {t('emailPreferences.emailLanguageHelp') || 'Language for email notifications'}
-              </p>
-            </div>
-            <select
-              className="language-select"
-              value={preferences.language}
-              onChange={(e) => handleChange('language', e.target.value)}
-              disabled={!preferences.email_enabled}
-            >
-              <option value="tr">Türkçe</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <div className="email-preferences-actions">

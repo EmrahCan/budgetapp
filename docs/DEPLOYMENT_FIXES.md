@@ -84,7 +84,7 @@ Keep only ONE `/health` location block. Delete the duplicate (usually at end of 
 - Cloudflare ↔ Origin: HTTP
 
 **DNS Records:**
-- Test: `test.budgetapp.site` → `108.141.152.224` (Proxied)
+- Test: `test.budgetapp.site` → `20.224.194.131` (Proxied)
 - Prod: `budgetapp.site` → `4.210.196.73` (Proxied)
 
 **Always Use HTTPS:** ON
@@ -142,7 +142,7 @@ Before deploying to any environment:
 
 ```bash
 # Connect
-ssh obiwan@108.141.152.224
+ssh obiwan@20.224.194.131
 
 # Clone
 cd ~ && git clone https://github.com/EmrahCan/budgetapp.git && cd budgetapp

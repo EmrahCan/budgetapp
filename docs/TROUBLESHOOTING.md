@@ -31,7 +31,7 @@ Common issues and solutions for Budget App deployment and operations.
    ```bash
    # Test SSH manually
    ssh obiwan@4.210.196.73
-   ssh obiwan@108.141.152.224
+   ssh obiwan@20.224.194.131
    ```
 
 3. **Check VM Disk Space:**

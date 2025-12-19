@@ -133,27 +133,7 @@ router.put('/preferences', authenticateToken, async (req, res) => {
       email_enabled,
       daily_digest_enabled,
       daily_digest_time,
-      report_emails_enabled,
-      report_frequency,
-      critical_alerts_enabled,
-      language,
     } = req.body;
-
-    // Validate report_frequency
-    if (report_frequency && !['daily', 'weekly', 'monthly'].includes(report_frequency)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid report_frequency. Must be daily, weekly, or monthly',
-      });
-    }
-
-    // Validate language
-    if (language && !['tr', 'en'].includes(language)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid language. Must be tr or en',
-      });
-    }
 
     // Validate time format (HH:MM:SS or HH:MM)
     if (daily_digest_time) {
@@ -170,10 +150,6 @@ router.put('/preferences', authenticateToken, async (req, res) => {
       email_enabled,
       daily_digest_enabled,
       daily_digest_time,
-      report_emails_enabled,
-      report_frequency,
-      critical_alerts_enabled,
-      language,
     });
 
     logger.info('Email preferences updated', { userId, preferences });

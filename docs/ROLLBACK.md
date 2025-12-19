@@ -258,8 +258,8 @@ If rollback fails or you need help:
 Test rollback procedure regularly in test environment:
 
 ```bash
-# On test VM (108.141.152.224)
-ssh obiwan@108.141.152.224
+# On test VM (20.224.194.131)
+ssh obiwan@20.224.194.131
 cd ~/budgetapp
 
 # Test rollback

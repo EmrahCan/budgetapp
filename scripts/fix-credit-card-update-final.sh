@@ -11,7 +11,7 @@ echo "=========================================="
 echo ""
 
 # Test VM details
-TEST_VM="obiwan@108.141.152.224"
+TEST_VM="obiwan@20.224.194.131"
 APP_DIR="/home/obiwan/budgetapp"
 
 echo "Step 1: Connecting to Test VM and checking current status..."

@@ -108,7 +108,7 @@ Package Manager: npm
 ┌─────────────────────────────────────────────────────────────┐
 │                    AZURE VM (Ubuntu 22.04)                   │
 │  IP: 4.210.196.73 (Production)                              │
-│  IP: 108.141.152.224 (Test)                                 │
+│  IP: 20.224.194.131 (Test)                                  │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │              NGINX (Port 80/443)                       │ │
@@ -198,7 +198,7 @@ Package Manager: npm
 ### Test Environment (Vm01)
 ```
 Domain:     test.budgetapp.site (planlanan)
-IP:         108.141.152.224
+IP:         20.224.194.131
 VM Name:    Vm01
 Username:   obiwan
 Password:   Eben2010++**

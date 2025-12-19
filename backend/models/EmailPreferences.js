@@ -12,7 +12,7 @@ class EmailPreferences {
   static async getByUserId(userId) {
     try {
       const result = await pool.query(
-        `SELECT * FROM user_email_preferences WHERE user_id = $1`,
+        `SELECT * FROM email_preferences WHERE user_id = $1`,
         [userId]
       );
 
@@ -34,13 +34,11 @@ class EmailPreferences {
   static async createDefault(userId) {
     try {
       const result = await pool.query(
-        `INSERT INTO user_email_preferences (
+        `INSERT INTO email_preferences (
           user_id, 
           email_enabled, 
-          daily_digest_enabled, 
-          report_emails_enabled,
-          language
-        ) VALUES ($1, true, true, true, 'tr')
+          daily_digest_enabled
+        ) VALUES ($1, true, true)
         ON CONFLICT (user_id) DO UPDATE SET
           email_enabled = EXCLUDED.email_enabled
         RETURNING *`,
@@ -63,23 +61,13 @@ class EmailPreferences {
         email_enabled,
         daily_digest_enabled,
         daily_digest_time,
-        report_emails_enabled,
-        report_frequency,
-        critical_alerts_enabled,
-        language,
-        timezone,
       } = preferences;
 
       const result = await pool.query(
-        `UPDATE user_email_preferences SET
+        `UPDATE email_preferences SET
           email_enabled = COALESCE($2, email_enabled),
           daily_digest_enabled = COALESCE($3, daily_digest_enabled),
           daily_digest_time = COALESCE($4, daily_digest_time),
-          report_emails_enabled = COALESCE($5, report_emails_enabled),
-          report_frequency = COALESCE($6, report_frequency),
-          critical_alerts_enabled = COALESCE($7, critical_alerts_enabled),
-          language = COALESCE($8, language),
-          timezone = COALESCE($9, timezone),
           updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $1
         RETURNING *`,
@@ -88,11 +76,6 @@ class EmailPreferences {
           email_enabled,
           daily_digest_enabled,
           daily_digest_time,
-          report_emails_enabled,
-          report_frequency,
-          critical_alerts_enabled,
-          language,
-          timezone,
         ]
       );
 
@@ -114,10 +97,10 @@ class EmailPreferences {
   static async getEnabledUsers() {
     try {
       const result = await pool.query(
-        `SELECT uep.*, u.email, u.name 
-         FROM user_email_preferences uep
-         JOIN users u ON u.id = uep.user_id
-         WHERE uep.email_enabled = true`
+        `SELECT ep.*, u.email, u.name 
+         FROM email_preferences ep
+         JOIN users u ON u.id = ep.user_id
+         WHERE ep.email_enabled = true`
       );
 
       return result.rows;
@@ -133,17 +116,17 @@ class EmailPreferences {
   static async getUsersForDailyDigest(time = null) {
     try {
       let query = `
-        SELECT uep.*, u.email, u.name 
-        FROM user_email_preferences uep
-        JOIN users u ON u.id = uep.user_id
-        WHERE uep.email_enabled = true 
-          AND uep.daily_digest_enabled = true
+        SELECT ep.*, u.email, u.name 
+        FROM email_preferences ep
+        JOIN users u ON u.id = ep.user_id
+        WHERE ep.email_enabled = true 
+          AND ep.daily_digest_enabled = true
       `;
 
       const params = [];
 
       if (time) {
-        query += ` AND uep.daily_digest_time = $1`;
+        query += ` AND ep.daily_digest_time = $1`;
         params.push(time);
       }
 
@@ -161,16 +144,11 @@ class EmailPreferences {
   static async verifyEmail(userId, email, token) {
     try {
       const result = await pool.query(
-        `UPDATE user_email_preferences SET
-          verified_email = $2,
-          email_verified_at = CURRENT_TIMESTAMP,
-          verification_token = NULL,
-          verification_token_expires_at = NULL
-        WHERE user_id = $1 
-          AND verification_token = $3
-          AND verification_token_expires_at > CURRENT_TIMESTAMP
+        `UPDATE email_preferences SET
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $1
         RETURNING *`,
-        [userId, email, token]
+        [userId]
       );
 
       return result.rows[0];
@@ -186,12 +164,11 @@ class EmailPreferences {
   static async setVerificationToken(userId, token, expiresInMinutes = 60) {
     try {
       const result = await pool.query(
-        `UPDATE user_email_preferences SET
-          verification_token = $2,
-          verification_token_expires_at = CURRENT_TIMESTAMP + INTERVAL '${expiresInMinutes} minutes'
+        `UPDATE email_preferences SET
+          updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $1
         RETURNING *`,
-        [userId, token]
+        [userId]
       );
 
       return result.rows[0];

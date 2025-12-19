@@ -147,7 +147,7 @@ Bu klasör, Budget App uygulamasının tüm mimari, teknik ve operasyonel doküm
 
 ### Sunucu Bilgileri
 ```
-Test:       108.141.152.224 (obiwan / Eben2010++**)
+Test:       20.224.194.131 (obiwan / Eben2010++**)
 Production: 4.210.196.73 (obiwan / Eben2010++**)
 Domain:     budgetapp.site
 ```

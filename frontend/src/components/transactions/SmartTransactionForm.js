@@ -12,6 +12,7 @@ import {
   Stack,
   Typography,
   LinearProgress,
+  Button,
 } from '@mui/material';
 import {
   AutoAwesome,
@@ -19,10 +20,12 @@ import {
   ThumbDown,
   Info,
   Close,
+  CameraAlt,
 } from '@mui/icons-material';
 import { debounce } from 'lodash';
 import { useAI } from '../../hooks/useAI';
 import AnomalyAlert from '../ai/AnomalyAlert';
+import ReceiptScanner from '../ocr/ReceiptScanner';
 
 /**
  * SmartTransactionForm - AI-powered transaction form with auto-categorization
@@ -42,6 +45,7 @@ const SmartTransactionForm = ({
   const [anomalyData, setAnomalyData] = useState(null);
   const [showAnomalyAlert, setShowAnomalyAlert] = useState(false);
   const [checkingAnomaly, setCheckingAnomaly] = useState(false);
+  const [showOCRScanner, setShowOCRScanner] = useState(false);
 
   // Check for anomalies
   const checkAnomaly = useCallback(async (amount, category, description) => {
@@ -202,8 +206,39 @@ const SmartTransactionForm = ({
     return 'Düşük Güven';
   };
 
+  const handleOCRDataExtracted = (ocrData) => {
+    setFormData(prev => ({
+      ...prev,
+      amount: ocrData.amount || prev.amount,
+      date: ocrData.date || prev.date,
+      description: ocrData.description || prev.description,
+    }));
+  };
+
   return (
     <Box>
+      {/* OCR Scanner Button */}
+      <Box sx={{ mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<CameraAlt />}
+          onClick={() => setShowOCRScanner(true)}
+          fullWidth
+          sx={{
+            borderStyle: 'dashed',
+            borderWidth: 2,
+            py: 1.5,
+            textTransform: 'none',
+            fontSize: '1rem',
+          }}
+        >
+          📷 Fiş Tara (OCR)
+        </Button>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          Fiş fotoğrafı çekerek otomatik veri girişi yapın
+        </Typography>
+      </Box>
+
       {/* Description Field with AI Indicator */}
       <TextField
         fullWidth
@@ -400,6 +435,13 @@ const SmartTransactionForm = ({
           category: formData.category || '',
           description: formData.description || '',
         }}
+      />
+
+      {/* OCR Scanner Dialog */}
+      <ReceiptScanner
+        open={showOCRScanner}
+        onClose={() => setShowOCRScanner(false)}
+        onDataExtracted={handleOCRDataExtracted}
       />
     </Box>
   );

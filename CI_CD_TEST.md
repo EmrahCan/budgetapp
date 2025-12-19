@@ -13,7 +13,7 @@ This file is created to test the CI/CD pipeline.
 When this file is pushed to the `develop` branch:
 1. GitHub Actions should trigger
 2. Tests should run
-3. Code should deploy to test VM (108.141.152.224)
+3. Code should deploy to test VM (20.224.194.131)
 4. Health checks should pass
 5. Smoke tests should run
 

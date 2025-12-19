@@ -29,7 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_credit_cards_bank_id ON credit_cards(bank_id);
 
 ## 📋 Deployment Status
 
-### ✅ Test VM (108.141.152.224)
+### ✅ Test VM (20.224.194.131)
 - [x] Code deployed (develop branch)
 - [x] Database migration applied
 - [x] Backend restarted
@@ -54,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_credit_cards_bank_id ON credit_cards(bank_id);
 6. Verify: Update succeeds
 7. Check backend logs:
    ```bash
-   ssh obiwan@108.141.152.224 'docker logs budget_backend --tail 50'
+   ssh obiwan@20.224.194.131 'docker logs budget_backend --tail 50'
    ```
 
 ### Production VM (After Deployment)
